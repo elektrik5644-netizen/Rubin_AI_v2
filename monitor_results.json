@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-09-24T00:42:21.655812",
+  "modules": {
+    "general": {
+      "status": "healthy",
+      "port": 8085,
+      "restart_attempts": 0
+    },
+    "mathematics": {
+      "status": "unhealthy",
+      "port": 8086,
+      "restart_attempts": 47
+    },
+    "electrical": {
+      "status": "unhealthy",
+      "port": 8087,
+      "restart_attempts": 47
+    },
+    "programming": {
+      "status": "healthy",
+      "port": 8088,
+      "restart_attempts": 0
+    },
+    "controllers": {
+      "status": "healthy",
+      "port": 9000,
+      "restart_attempts": 0
+    }
+  },
+  "actions_taken": [
+    "Не удалось перезапустить модуль mathematics",
+    "Не удалось перезапустить модуль electrical"
+  ]
+}

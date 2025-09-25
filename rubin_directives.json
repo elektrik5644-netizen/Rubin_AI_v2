@@ -1,0 +1,73 @@
+{
+  "active_directives": [
+    {
+      "id": "dir_20250924_001109",
+      "text": "всегда добавляй примеры к ответам",
+      "created_at": "2025-09-24T00:11:09.296929",
+      "created_by": "test_user",
+      "active": true,
+      "execution_count": 3,
+      "last_executed": "2025-09-24T03:32:13.058707"
+    },
+    {
+      "id": "dir_20250924_001111",
+      "text": "при анализе графиков проверяй тренд",
+      "created_at": "2025-09-24T00:11:11.340320",
+      "created_by": "test_user",
+      "active": true,
+      "execution_count": 0,
+      "last_executed": null
+    },
+    {
+      "id": "dir_20250924_001113",
+      "text": "в электротехнике объясняй формулы подробнее",
+      "created_at": "2025-09-24T00:11:13.414869",
+      "created_by": "test_user",
+      "active": true,
+      "execution_count": 0,
+      "last_executed": null
+    }
+  ],
+  "directive_history": [
+    {
+      "action": "added",
+      "directive": {
+        "id": "dir_20250924_001109",
+        "text": "всегда добавляй примеры к ответам",
+        "created_at": "2025-09-24T00:11:09.296929",
+        "created_by": "test_user",
+        "active": true,
+        "execution_count": 0,
+        "last_executed": null
+      },
+      "timestamp": "2025-09-24T00:11:09.296936"
+    },
+    {
+      "action": "added",
+      "directive": {
+        "id": "dir_20250924_001111",
+        "text": "при анализе графиков проверяй тренд",
+        "created_at": "2025-09-24T00:11:11.340320",
+        "created_by": "test_user",
+        "active": true,
+        "execution_count": 0,
+        "last_executed": null
+      },
+      "timestamp": "2025-09-24T00:11:11.340331"
+    },
+    {
+      "action": "added",
+      "directive": {
+        "id": "dir_20250924_001113",
+        "text": "в электротехнике объясняй формулы подробнее",
+        "created_at": "2025-09-24T00:11:13.414869",
+        "created_by": "test_user",
+        "active": true,
+        "execution_count": 0,
+        "last_executed": null
+      },
+      "timestamp": "2025-09-24T00:11:13.414875"
+    }
+  ],
+  "last_updated": "2025-09-24T03:32:13.058880"
+}

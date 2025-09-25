@@ -1,0 +1,128 @@
+[
+  {
+    "test_name": "Server Connection",
+    "status": "PASS",
+    "details": "Сервер доступен: Rubin AI Matrix Simple is running!",
+    "timestamp": "2025-09-13 23:10:55"
+  },
+  {
+    "test_name": "Endpoint /health",
+    "status": "PASS",
+    "details": "HTTP 200",
+    "timestamp": "2025-09-13 23:10:57"
+  },
+  {
+    "test_name": "Endpoint /api/chat",
+    "status": "PASS",
+    "details": "HTTP 200",
+    "timestamp": "2025-09-13 23:10:59"
+  },
+  {
+    "test_name": "Endpoint /api/code/analyze",
+    "status": "PASS",
+    "details": "HTTP 200",
+    "timestamp": "2025-09-13 23:11:01"
+  },
+  {
+    "test_name": "Chat: 'Привет, Rubin!...'",
+    "status": "PASS",
+    "details": "Получен ответ: Привет! Я Rubin AI. Готов помочь с программировани...",
+    "timestamp": "2025-09-13 23:11:03"
+  },
+  {
+    "test_name": "Chat: 'Как дела?...'",
+    "status": "PASS",
+    "details": "Получен ответ: Отлично! Система работает стабильно. Чем могу помо...",
+    "timestamp": "2025-09-13 23:11:05"
+  },
+  {
+    "test_name": "Chat: 'Что такое сервоприво...'",
+    "status": "PASS",
+    "details": "Получен ответ: Понял ваш запрос: 'Что такое сервопривод?'. Я спец...",
+    "timestamp": "2025-09-13 23:11:13"
+  },
+  {
+    "test_name": "Chat: 'Как работает ПИД рег...'",
+    "status": "PASS",
+    "details": "Получен ответ: Понял ваш запрос: 'Как работает ПИД регулятор?'. Я...",
+    "timestamp": "2025-09-13 23:11:15"
+  },
+  {
+    "test_name": "Chat: 'Помоги с программиро...'",
+    "status": "PASS",
+    "details": "Получен ответ: Python - отличный язык программирования! Могу помо...",
+    "timestamp": "2025-09-13 23:11:17"
+  },
+  {
+    "test_name": "Code Analysis: python",
+    "status": "FAIL",
+    "details": "Нет результатов анализа",
+    "timestamp": "2025-09-13 23:11:19"
+  },
+  {
+    "test_name": "Code Analysis: c",
+    "status": "FAIL",
+    "details": "Нет результатов анализа",
+    "timestamp": "2025-09-13 23:11:25"
+  },
+  {
+    "test_name": "Code Analysis: sql",
+    "status": "FAIL",
+    "details": "Нет результатов анализа",
+    "timestamp": "2025-09-13 23:11:27"
+  },
+  {
+    "test_name": "Database Creation",
+    "status": "PASS",
+    "details": "База данных создана успешно",
+    "timestamp": "2025-09-13 23:11:27"
+  },
+  {
+    "test_name": "Database Insert",
+    "status": "PASS",
+    "details": "Данные успешно вставлены",
+    "timestamp": "2025-09-13 23:11:27"
+  },
+  {
+    "test_name": "Database Select",
+    "status": "PASS",
+    "details": "Найдено 1 записей",
+    "timestamp": "2025-09-13 23:11:27"
+  },
+  {
+    "test_name": "Full Cycle",
+    "status": "PASS",
+    "details": "Полный цикл выполнен успешно",
+    "timestamp": "2025-09-13 23:11:29"
+  },
+  {
+    "test_name": "Performance Test",
+    "status": "PASS",
+    "details": "Успешно: 5/5, Среднее время: 3.28с, Макс: 8.23с, Мин: 2.03с",
+    "timestamp": "2025-09-13 23:11:46"
+  },
+  {
+    "test_name": "Error Handling: Пустое сообщение",
+    "status": "WARN",
+    "details": "Неожиданный статус: HTTP 200",
+    "timestamp": "2025-09-13 23:11:48"
+  },
+  {
+    "test_name": "Error Handling: Очень длинное сообщение",
+    "status": "WARN",
+    "details": "Неожиданный статус: HTTP 200",
+    "timestamp": "2025-09-13 23:11:50"
+  },
+  {
+    "test_name": "Error Handling: Некорректный JSON",
+    "status": "PASS",
+    "details": "Корректно обработана ошибка: HTTP 500",
+    "timestamp": "2025-09-13 23:11:52"
+  },
+  {
+    "test_name": "Error Handling: Несуществующий endpoint",
+    "status": "PASS",
+    "details": "Корректно обработана ошибка: HTTP 404",
+    "timestamp": "2025-09-13 23:11:54"
+  }
+]

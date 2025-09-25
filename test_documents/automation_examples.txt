@@ -1,0 +1,353 @@
+# Примеры автоматизации
+
+## Система управления температурой
+
+### Описание
+Автоматическая система поддержания температуры в помещении с использованием ПИД-регулятора.
+
+### Компоненты
+- Датчик температуры DS18B20
+- ПЛК Siemens S7-1200
+- Нагреватель 2 кВт
+- Вентилятор охлаждения
+- HMI панель
+
+### Программа для ПЛК
+```pascal
+PROGRAM TemperatureControl
+VAR
+    Setpoint : REAL := 25.0;  // Заданная температура
+    ActualTemp : REAL;        // Текущая температура
+    Error : REAL;             // Ошибка
+    PID_Output : REAL;        // Выход ПИД-регулятора
+    Heater : BOOL;            // Нагреватель
+    Cooler : BOOL;            // Охладитель
+    PID_Controller : PID;     // ПИД-регулятор
+END_VAR
+
+// Чтение температуры
+ActualTemp := READ_ANALOG_INPUT(0);
+
+// Вычисление ошибки
+Error := Setpoint - ActualTemp;
+
+// ПИД-регулятор
+PID_Controller(
+    PV := ActualTemp,
+    SP := Setpoint,
+    Kp := 2.0,
+    Ki := 0.1,
+    Kd := 0.05,
+    OUT => PID_Output
+);
+
+// Управление исполнительными устройствами
+IF PID_Output > 0 THEN
+    Heater := TRUE;
+    Cooler := FALSE;
+ELSIF PID_Output < 0 THEN
+    Heater := FALSE;
+    Cooler := TRUE;
+ELSE
+    Heater := FALSE;
+    Cooler := FALSE;
+END_IF;
+
+// Запись выходов
+WRITE_DIGITAL_OUTPUT(0, Heater);
+WRITE_DIGITAL_OUTPUT(1, Cooler);
+END_PROGRAM
+```
+
+## Система управления уровнем
+
+### Описание
+Система поддержания уровня жидкости в резервуаре с защитой от переполнения.
+
+### Компоненты
+- Ультразвуковой датчик уровня
+- ПЛК Allen-Bradley CompactLogix
+- Насос подачи
+- Клапан слива
+- Сигнальные лампы
+
+### Программа для ПЛК
+```pascal
+PROGRAM LevelControl
+VAR
+    Level : REAL;             // Текущий уровень
+    Setpoint : REAL := 50.0;  // Заданный уровень
+    Pump : BOOL;              // Насос
+    Valve : BOOL;             // Клапан
+    HighLevel : BOOL;         // Высокий уровень
+    LowLevel : BOOL;          // Низкий уровень
+    Alarm : BOOL;             // Авария
+END_VAR
+
+// Чтение уровня
+Level := READ_ANALOG_INPUT(1);
+
+// Определение состояний
+HighLevel := Level > 80.0;
+LowLevel := Level < 20.0;
+
+// Логика управления
+IF LowLevel THEN
+    Pump := TRUE;   // Включить насос
+    Valve := FALSE; // Закрыть клапан
+ELSIF HighLevel THEN
+    Pump := FALSE;  // Выключить насос
+    Valve := TRUE;  // Открыть клапан
+    Alarm := TRUE;  // Включить аварию
+ELSE
+    // Поддержание уровня
+    IF Level < Setpoint THEN
+        Pump := TRUE;
+        Valve := FALSE;
+    ELSE
+        Pump := FALSE;
+        Valve := TRUE;
+    END_IF;
+    Alarm := FALSE;
+END_IF;
+
+// Запись выходов
+WRITE_DIGITAL_OUTPUT(2, Pump);
+WRITE_DIGITAL_OUTPUT(3, Valve);
+WRITE_DIGITAL_OUTPUT(4, Alarm);
+END_PROGRAM
+```
+
+## Система управления освещением
+
+### Описание
+Автоматическое управление освещением на основе датчика освещенности и расписания.
+
+### Компоненты
+- Датчик освещенности BH1750
+- ПЛК Schneider Electric Modicon M221
+- Реле управления освещением
+- Кнопки ручного управления
+- Индикаторы состояния
+
+### Программа для ПЛК
+```pascal
+PROGRAM LightingControl
+VAR
+    LightLevel : REAL;        // Уровень освещенности
+    ManualMode : BOOL;        // Ручной режим
+    AutoMode : BOOL;          // Автоматический режим
+    LightOn : BOOL;           // Освещение включено
+    Schedule : BOOL;          // Расписание
+    Time : TIME;              // Текущее время
+END_VAR
+
+// Чтение датчика освещенности
+LightLevel := READ_ANALOG_INPUT(2);
+
+// Чтение кнопок
+ManualMode := READ_DIGITAL_INPUT(0);
+AutoMode := READ_DIGITAL_INPUT(1);
+
+// Получение времени
+Time := GET_CURRENT_TIME();
+
+// Определение расписания (6:00 - 22:00)
+Schedule := (Time >= T#6h) AND (Time <= T#22h);
+
+// Логика управления
+IF ManualMode THEN
+    // Ручной режим
+    LightOn := READ_DIGITAL_INPUT(2); // Кнопка включения
+ELSIF AutoMode AND Schedule THEN
+    // Автоматический режим по расписанию
+    IF LightLevel < 100.0 THEN  // Порог освещенности
+        LightOn := TRUE;
+    ELSE
+        LightOn := FALSE;
+    END_IF;
+ELSE
+    // Ночной режим
+    LightOn := FALSE;
+END_IF;
+
+// Запись выхода
+WRITE_DIGITAL_OUTPUT(5, LightOn);
+END_PROGRAM
+```
+
+## Система мониторинга
+
+### Описание
+Система мониторинга параметров технологического процесса с архивированием данных.
+
+### Компоненты
+- Множество датчиков (температура, давление, расход)
+- ПЛК Siemens S7-1500
+- SCADA система WinCC
+- База данных SQL Server
+- Веб-интерфейс
+
+### Программа архивирования
+```pascal
+PROGRAM DataLogging
+VAR
+    Temperature : REAL;
+    Pressure : REAL;
+    Flow : REAL;
+    LogInterval : TIME := T#1m;  // Интервал записи
+    LastLogTime : TIME;
+    CurrentTime : TIME;
+    LogData : STRUCT
+        Timestamp : TIME;
+        Temp : REAL;
+        Press : REAL;
+        FlowRate : REAL;
+    END_STRUCT;
+END_VAR
+
+// Получение текущего времени
+CurrentTime := GET_CURRENT_TIME();
+
+// Проверка интервала записи
+IF CurrentTime - LastLogTime >= LogInterval THEN
+    
+    // Чтение данных с датчиков
+    Temperature := READ_ANALOG_INPUT(0);
+    Pressure := READ_ANALOG_INPUT(1);
+    Flow := READ_ANALOG_INPUT(2);
+    
+    // Подготовка данных для записи
+    LogData.Timestamp := CurrentTime;
+    LogData.Temp := Temperature;
+    LogData.Press := Pressure;
+    LogData.FlowRate := Flow;
+    
+    // Запись в базу данных
+    WRITE_TO_DATABASE(LogData);
+    
+    // Обновление времени последней записи
+    LastLogTime := CurrentTime;
+END_IF;
+END_PROGRAM
+```
+
+## Система безопасности
+
+### Описание
+Система безопасности с контролем доступа и пожарной сигнализацией.
+
+### Компоненты
+- Считыватель карт доступа
+- Датчики дыма
+- Датчики движения
+- ПЛК Omron CP1E
+- Сирена
+- Стробоскоп
+- Электромагнитные замки
+
+### Программа безопасности
+```pascal
+PROGRAM SecuritySystem
+VAR
+    AccessCard : STRING[20];   // Код карты доступа
+    ValidCard : BOOL;          // Валидная карта
+    SmokeDetected : BOOL;      // Обнаружен дым
+    MotionDetected : BOOL;     // Обнаружено движение
+    DoorOpen : BOOL;           // Дверь открыта
+    AlarmActive : BOOL;        // Авария активна
+    Siren : BOOL;              // Сирена
+    Strobe : BOOL;             // Стробоскоп
+    DoorLock : BOOL;           // Замок двери
+END_VAR
+
+// Чтение входов
+AccessCard := READ_STRING_INPUT(0);
+SmokeDetected := READ_DIGITAL_INPUT(0);
+MotionDetected := READ_DIGITAL_INPUT(1);
+DoorOpen := READ_DIGITAL_INPUT(2);
+
+// Проверка карты доступа
+ValidCard := CHECK_ACCESS_CARD(AccessCard);
+
+// Логика безопасности
+IF SmokeDetected THEN
+    // Пожарная авария
+    AlarmActive := TRUE;
+    Siren := TRUE;
+    Strobe := TRUE;
+    DoorLock := FALSE;  // Разблокировать двери
+ELSIF NOT ValidCard AND MotionDetected THEN
+    // Несанкционированный доступ
+    AlarmActive := TRUE;
+    Siren := TRUE;
+    Strobe := FALSE;
+    DoorLock := TRUE;   // Заблокировать двери
+ELSIF ValidCard THEN
+    // Разрешенный доступ
+    AlarmActive := FALSE;
+    Siren := FALSE;
+    Strobe := FALSE;
+    DoorLock := FALSE;  // Разблокировать двери
+ELSE
+    // Нормальный режим
+    AlarmActive := FALSE;
+    Siren := FALSE;
+    Strobe := FALSE;
+    DoorLock := TRUE;   // Заблокировать двери
+END_IF;
+
+// Запись выходов
+WRITE_DIGITAL_OUTPUT(0, Siren);
+WRITE_DIGITAL_OUTPUT(1, Strobe);
+WRITE_DIGITAL_OUTPUT(2, DoorLock);
+END_PROGRAM
+```
+
+## Настройка ПИД-регулятора
+
+### Метод Зиглера-Николса
+1. Установить Ki = 0, Kd = 0
+2. Увеличивать Kp до появления колебаний
+3. Записать критический период Tcr
+4. Вычислить параметры:
+   - Kp = 0.6 × Kcr
+   - Ki = 2 × Kp / Tcr
+   - Kd = Kp × Tcr / 8
+
+### Практические рекомендации
+- Начинайте с P-регулятора
+- Добавляйте I для устранения статической ошибки
+- Добавляйте D для улучшения динамики
+- Избегайте слишком больших значений D
+
+## Диагностика и обслуживание
+
+### Регулярные проверки
+- Калибровка датчиков
+- Проверка соединений
+- Тестирование аварийных функций
+- Обновление программного обеспечения
+
+### Мониторинг состояния
+- Контроль температуры компонентов
+- Анализ логов ошибок
+- Проверка производительности
+- Резервное копирование данных
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

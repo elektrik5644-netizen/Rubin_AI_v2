@@ -1,0 +1,4 @@
+"C:\ии анализ\notepad-plus-plus-master\PowerEditor\src\CMakeLists.txt"
+"C:\ии анализ\notepad-plus-plus-master\PowerEditor\src\MISC\PluginsManager\Notepad_plus_msgs.h"
+"C:\ии анализ\notepad-plus-plus-master\PowerEditor\src\menuCmdID.h"
+C:\Users\elekt\OneDrive\Desktop\ии разработка\RubinBridge

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubin AI v2 - Умный Диспетчер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #28a745;
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-offline {
+            background-color: #dc3545;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .chat-section {
+            padding: 30px;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.system {
+            background: white;
+            border: 1px solid #e9ecef;
+            color: #333;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-section input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-section input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        .input-section button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .input-section button:hover {
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Rubin AI v2</h1>
+            <p>Умный диспетчер с нейронной сетью</p>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-card">
+                <h3>🧠 Neural Dispatcher</h3>
+                <div id="neural-dispatcher-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>🔌 Электротехника</h3>
+                <div id="electrical-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>📡 Радиомеханика</h3>
+                <div id="radiomechanics-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>🎛️ Контроллеры</h3>
+                <div id="controllers-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>🧮 Математика</h3>
+                <div id="mathematics-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>💻 Программирование</h3>
+                <div id="programming-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+            <div class="status-card">
+                <h3>🌐 Общий сервер</h3>
+                <div id="general-status">
+                    <span class="status-indicator status-offline"></span>
+                    <span>Проверка...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div class="chat-container" id="chat-container">
+                <div class="message system">
+                    <strong>🤖 Rubin AI:</strong> Добро пожаловать! Я готов помочь вам с вопросами по электротехнике, радиомеханике, контроллерам, математике и программированию. Задавайте вопросы!
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Обрабатываю запрос...</div>
+            </div>
+
+            <div class="input-section">
+                <input type="text" id="message-input" placeholder="Введите ваш вопрос..." maxlength="500">
+                <button onclick="sendMessage()">Отправить</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Rubin AI v2 - Интеллектуальная система с нейронной сетью</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:8080";
+        
+        // Конфигурация серверов для мониторинга
+        const SERVERS = {
+            'neural-dispatcher': { port: 8080, health_endpoint: "/api/health" },
+            'electrical': { port: 8087, health_endpoint: "/health" },
+            'radiomechanics': { port: 8089, health_endpoint: "/health" },
+            'controllers': { port: 9000, health_endpoint: "/health" },
+            'mathematics': { port: 8086, health_endpoint: "/health" },
+            'programming': { port: 8088, health_endpoint: "/api/programming/explain" },  // Используем основной endpoint
+            'general': { port: 8085, health_endpoint: "/health" }
+        };
+
+        // Проверка статуса всех серверов
+        async function checkAllServersStatus() {
+            for (const [key, config] of Object.entries(SERVERS)) {
+                await checkServerStatus(key, config);
+            }
+        }
+
+        // Проверка статуса отдельного сервера
+        async function checkServerStatus(key, config) {
+            const url = `http://localhost:${config.port}${config.health_endpoint}`;
+            
+            try {
+                let response;
+                if (key === 'programming') {
+                    // Для programming сервера используем POST запрос
+                    response = await fetch(url, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ concept: 'test' }),
+                        mode: 'cors',
+                        timeout: 5000
+                    });
+                } else {
+                    response = await fetch(url, { 
+                        method: 'GET', 
+                        mode: 'cors',
+                        timeout: 5000
+                    });
+                }
+                
+                const statusElement = document.getElementById(`${key}-status`);
+                if (response.ok) {
+                    statusElement.innerHTML = `
+                        <span class="status-indicator status-online"></span>
+                        <span>ОНЛАЙН (${config.port})</span>
+                    `;
+                } else {
+                    statusElement.innerHTML = `
+                        <span class="status-indicator status-offline"></span>
+                        <span>ОФФЛАЙН (${config.port})</span>
+                    `;
+                }
+            } catch (error) {
+                const statusElement = document.getElementById(`${key}-status`);
+                statusElement.innerHTML = `
+                    <span class="status-indicator status-offline"></span>
+                    <span>ОФФЛАЙН (${config.port})</span>
+                `;
+            }
+        }
+
+        // Отправка сообщения
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Добавляем сообщение пользователя
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Показываем загрузку
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Добавляем ответ системы
+                let responseText = '';
+                if (data.success) {
+                    const responseData = data.response;
+                    if (responseData.title) {
+                        responseText = `<strong>${responseData.title}</strong><br>`;
+                    }
+                    if (responseData.description) {
+                        responseText += responseData.description + '<br><br>';
+                    }
+                    if (responseData.explanation) {
+                        responseText += responseData.explanation;
+                    }
+                    
+                    // Добавляем информацию о категории и сервере
+                    if (data.category) {
+                        responseText += `<br><br><em>📊 Категория: ${data.category}</em>`;
+                    }
+                    if (data.server) {
+                        responseText += `<br><em>🌐 Сервер: ${data.server}</em>`;
+                    }
+                    if (data.neural_used) {
+                        responseText += `<br><em>🧠 Использована нейронная сеть</em>`;
+                    }
+                } else {
+                    responseText = data.message || 'Произошла ошибка при обработке запроса';
+                }
+
+                addMessage(responseText, 'system');
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage(`Ошибка соединения: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+                // Обновляем статус серверов после отправки сообщения
+                checkAllServersStatus();
+            }
+        }
+
+        // Добавление сообщения в чат
+        function addMessage(text, type) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Показать/скрыть загрузку
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.style.display = show ? 'block' : 'none';
+        }
+
+        // Обработка нажатия Enter
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Проверяем статус серверов при загрузке страницы
+        window.onload = function() {
+            checkAllServersStatus();
+            // Обновляем статус каждые 30 секунд
+            setInterval(checkAllServersStatus, 30000);
+        };
+    </script>
+</body>
+</html>

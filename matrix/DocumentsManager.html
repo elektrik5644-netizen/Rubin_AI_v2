@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер Документов Rubin AI v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .category-select {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            background: white;
+            min-width: 200px;
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .result-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-category {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .result-preview {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #1976D2, #2196F3);
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .document-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .document-content {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Менеджер Документов</h1>
+            <p>Поиск и управление технической литературой Rubin AI v2.0</p>
+        </div>
+
+        <div class="search-section">
+            <h2>🔍 Поиск Документов</h2>
+            <form class="search-form" onsubmit="searchDocuments(event)">
+                <input type="text" class="search-input" id="searchQuery" placeholder="Введите запрос для поиска..." required>
+                <select class="category-select" id="categoryFilter">
+                    <option value="">Все категории</option>
+                </select>
+                <button type="submit" class="search-btn">🔍 Поиск</button>
+            </form>
+        </div>
+
+        <div class="stats-section">
+            <h2>📊 Статистика</h2>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDocs">-</div>
+                    <div class="stat-label">Всего документов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCategories">-</div>
+                    <div class="stat-label">Категорий</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTypes">-</div>
+                    <div class="stat-label">Типов файлов</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Выполняется поиск...</p>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>📄 Результаты Поиска</h2>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Rubin AI v2.0 - Система управления документами</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра документа -->
+    <div id="documentModal" class="document-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle"></h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="document-content" id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8088/api/documents';
+
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.innerHTML = `
+                <h2>📄 Результаты Поиска</h2>
+                <div class="error">❌ ${message}</div>
+            `;
+        }
+
+        function showSuccess(message) {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.innerHTML = `
+                <h2>📄 Результаты Поиска</h2>
+                <div class="success">✅ ${message}</div>
+            `;
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('totalDocs').textContent = stats.total_documents;
+                    document.getElementById('totalCategories').textContent = stats.categories.length;
+                    document.getElementById('totalTypes').textContent = stats.file_types.length;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/categories`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const categorySelect = document.getElementById('categoryFilter');
+                    categorySelect.innerHTML = '<option value="">Все категории</option>';
+                    
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = `${category.name} (${category.count})`;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+            }
+        }
+
+        async function searchDocuments(event) {
+            event.preventDefault();
+            
+            const query = document.getElementById('searchQuery').value.trim();
+            const category = document.getElementById('categoryFilter').value;
+            
+            if (!query) {
+                showError('Введите запрос для поиска');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        category: category || null,
+                        limit: 20
+                    })
+                });
+                
+                const data = await response.json();
+                showLoading(false);
+                
+                if (data.success) {
+                    displayResults(data.results, data.query);
+                } else {
+                    showError(data.error || 'Ошибка поиска');
+                }
+                
+            } catch (error) {
+                showLoading(false);
+                showError('Ошибка соединения с сервером');
+                console.error('Ошибка поиска:', error);
+            }
+        }
+
+        function displayResults(results, query) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            resultsSection.style.display = 'block';
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <h3>😔 Документы не найдены</h3>
+                        <p>По запросу "${query}" ничего не найдено.</p>
+                        <p>Попробуйте изменить поисковый запрос или выбрать другую категорию.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsContainer.innerHTML = `
+                <div class="success">
+                    Найдено ${results.length} документов по запросу "${query}"
+                </div>
+            `;
+            
+            results.forEach(doc => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">${doc.file_name}</div>
+                        <div class="result-category">${doc.category}</div>
+                    </div>
+                    <div class="result-preview">${doc.content_preview}</div>
+                    <div class="result-actions">
+                        <button class="btn btn-primary" onclick="viewDocument(${doc.id})">👁️ Просмотр</button>
+                        <button class="btn btn-secondary" onclick="downloadDocument(${doc.id})">📥 Скачать</button>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultItem);
+            });
+        }
+
+        async function viewDocument(docId) {
+            try {
+                const response = await fetch(`${API_BASE}/${docId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const doc = data.document;
+                    document.getElementById('modalTitle').textContent = doc.file_name;
+                    document.getElementById('modalContent').innerHTML = `
+                        <div style="margin-bottom: 20px;">
+                            <strong>Категория:</strong> ${doc.category}<br>
+                            <strong>Путь:</strong> ${doc.file_path}<br>
+                            <strong>Размер:</strong> ${doc.metadata.character_count} символов
+                        </div>
+                        <div style="white-space: pre-wrap; font-family: monospace; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                            ${doc.content}
+                        </div>
+                    `;
+                    document.getElementById('documentModal').style.display = 'block';
+                } else {
+                    showError('Документ не найден');
+                }
+                
+            } catch (error) {
+                showError('Ошибка загрузки документа');
+                console.error('Ошибка загрузки документа:', error);
+            }
+        }
+
+        function downloadDocument(docId) {
+            // Здесь можно реализовать скачивание документа
+            showSuccess('Функция скачивания будет реализована в следующей версии');
+        }
+
+        function closeModal() {
+            document.getElementById('documentModal').style.display = 'none';
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('documentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCategories();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

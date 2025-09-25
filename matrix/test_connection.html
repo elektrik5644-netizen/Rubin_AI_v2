@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест подключения к Rubin AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест подключения к Rubin AI</h1>
+    
+    <div class="test-section">
+        <h3>1. Тест здоровья сервера</h3>
+        <button onclick="testHealth()">Проверить /health</button>
+        <div id="health-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Тест чата</h3>
+        <button onclick="testChat()">Отправить сообщение</button>
+        <div id="chat-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Тест CORS</h3>
+        <button onclick="testCORS()">Проверить CORS</button>
+        <div id="cors-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 Результаты</h3>
+        <div id="results">Нажмите кнопки выше для тестирования...</div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            results.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testHealth() {
+            log('🔍 Тестирование /health...');
+            const resultDiv = document.getElementById('health-result');
+            
+            try {
+                const response = await fetch('http://localhost:8083/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">✅ Успешно! Статус: ${data.status}</div>`;
+                    log(`✅ Health API работает: ${data.message}`, 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка: HTTP ${response.status}</div>`;
+                    log(`❌ Health API ошибка: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка: ${error.message}</div>`;
+                log(`❌ Health API ошибка: ${error.message}`, 'error');
+            }
+        }
+
+        async function testChat() {
+            log('💬 Тестирование /api/chat...');
+            const resultDiv = document.getElementById('chat-result');
+            
+            try {
+                const response = await fetch('http://localhost:8083/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'привет'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">✅ Успешно! Ответ: ${data.response}</div>`;
+                    log(`✅ Chat API работает: ${data.response}`, 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка: HTTP ${response.status}</div>`;
+                    log(`❌ Chat API ошибка: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка: ${error.message}</div>`;
+                log(`❌ Chat API ошибка: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            log('🌐 Тестирование CORS...');
+            const resultDiv = document.getElementById('cors-result');
+            
+            try {
+                const response = await fetch('http://localhost:8083/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">✅ CORS работает! Endpoints: ${data.endpoints.join(', ')}</div>`;
+                    log(`✅ CORS работает: ${data.message}`, 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ CORS ошибка: HTTP ${response.status}</div>`;
+                    log(`❌ CORS ошибка: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ CORS ошибка: ${error.message}</div>`;
+                log(`❌ CORS ошибка: ${error.message}`, 'error');
+            }
+        }
+
+        // Автоматический тест при загрузке
+        window.addEventListener('load', function() {
+            log('🚀 Страница загружена, начинаем тестирование...');
+            setTimeout(() => {
+                testHealth();
+                setTimeout(() => {
+                    testChat();
+                    setTimeout(() => {
+                        testCORS();
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

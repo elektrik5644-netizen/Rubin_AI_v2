@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Frontend Rubin AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #106ebe;
+        }
+        
+        .btn.success {
+            background: #4CAF50;
+        }
+        
+        .btn.error {
+            background: #f44336;
+        }
+        
+        .btn.warning {
+            background: #ff9800;
+        }
+        
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #3e3e42;
+            border-radius: 5px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .test-results {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .result-pass {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .result-fail {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 3px solid #f44336;
+        }
+        
+        .result-warn {
+            background: rgba(255, 152, 0, 0.2);
+            border-left: 3px solid #ff9800;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #4CAF50;
+        }
+        
+        .status-offline {
+            background: #f44336;
+        }
+        
+        .status-unknown {
+            background: #ff9800;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #858585;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Тест Frontend Rubin AI</h1>
+            <p>Проверка полного цикла от пользователя до базы данных</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Всего тестов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Пройдено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Провалено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="serverStatus">❓</div>
+                <div class="stat-label">Статус сервера</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Тест подключения к серверу</h3>
+            <div class="test-controls">
+                <button class="btn" onclick="testServerConnection()">Проверить подключение</button>
+                <button class="btn" onclick="testHealthEndpoint()">Проверить /health</button>
+            </div>
+            <div class="test-results" id="connectionResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💬 Тест чата</h3>
+            <input type="text" class="test-input" id="chatInput" placeholder="Введите сообщение для тестирования..." value="Привет, Rubin! Как дела?">
+            <div class="test-controls">
+                <button class="btn" onclick="testChatMessage()">Отправить сообщение</button>
+                <button class="btn" onclick="testMultipleMessages()">Тест множественных сообщений</button>
+                <button class="btn" onclick="testChatPerformance()">Тест производительности</button>
+            </div>
+            <div class="test-results" id="chatResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💻 Тест анализа кода</h3>
+            <textarea class="test-input" id="codeInput" rows="5" placeholder="Введите код для анализа...">def hello():
+    print("Hello, World!")
+    return "success"</textarea>
+            <div class="test-controls">
+                <button class="btn" onclick="testCodeAnalysis()">Анализировать код</button>
+                <button class="btn" onclick="testMultipleLanguages()">Тест разных языков</button>
+            </div>
+            <div class="test-results" id="codeResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📄 Тест загрузки документов</h3>
+            <input type="file" class="test-input" id="fileInput" accept=".txt,.md,.py,.js,.html">
+            <div class="test-controls">
+                <button class="btn" onclick="testFileUpload()">Загрузить файл</button>
+                <button class="btn" onclick="testTextUpload()">Загрузить текст</button>
+                <button class="btn" onclick="testDatabaseStats()">Статистика БД</button>
+            </div>
+            <div class="test-results" id="uploadResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Полный цикл тестирования</h3>
+            <div class="test-controls">
+                <button class="btn success" onclick="runFullCycleTest()">Запустить полный тест</button>
+                <button class="btn warning" onclick="runPerformanceTest()">Тест производительности</button>
+                <button class="btn error" onclick="runErrorHandlingTest()">Тест обработки ошибок</button>
+                <button class="btn" onclick="clearAllResults()">Очистить результаты</button>
+            </div>
+            <div class="test-results" id="fullCycleResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://localhost:8083';
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0
+        };
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+        }
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result-item result-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            container.appendChild(resultDiv);
+            container.scrollTop = container.scrollHeight;
+            
+            // Обновляем статистику
+            testStats.total++;
+            if (type === 'pass') testStats.passed++;
+            if (type === 'fail') testStats.failed++;
+            updateStats();
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        function clearAllResults() {
+            const containers = ['connectionResults', 'chatResults', 'codeResults', 'uploadResults', 'fullCycleResults'];
+            containers.forEach(clearResults);
+            testStats = { total: 0, passed: 0, failed: 0 };
+            updateStats();
+        }
+
+        async function testServerConnection() {
+            addResult('connectionResults', 'Проверка подключения к серверу...', 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/health`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('connectionResults', `✅ Сервер доступен: ${data.message}`, 'pass');
+                    document.getElementById('serverStatus').textContent = '🟢';
+                } else {
+                    addResult('connectionResults', `❌ HTTP ${response.status}`, 'fail');
+                    document.getElementById('serverStatus').textContent = '🔴';
+                }
+            } catch (error) {
+                addResult('connectionResults', `❌ Ошибка подключения: ${error.message}`, 'fail');
+                document.getElementById('serverStatus').textContent = '🔴';
+            }
+        }
+
+        async function testHealthEndpoint() {
+            addResult('connectionResults', 'Проверка endpoint /health...', 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/health`);
+                const data = await response.json();
+                
+                addResult('connectionResults', `✅ Health endpoint работает: ${JSON.stringify(data)}`, 'pass');
+            } catch (error) {
+                addResult('connectionResults', `❌ Ошибка health endpoint: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testChatMessage() {
+            const message = document.getElementById('chatInput').value;
+            if (!message.trim()) {
+                addResult('chatResults', '❌ Введите сообщение для тестирования', 'fail');
+                return;
+            }
+            
+            addResult('chatResults', `Отправка сообщения: "${message}"`, 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('chatResults', `✅ Получен ответ: ${data.response.substring(0, 100)}...`, 'pass');
+                } else {
+                    addResult('chatResults', `❌ HTTP ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                addResult('chatResults', `❌ Ошибка: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testMultipleMessages() {
+            const messages = [
+                'Привет, Rubin!',
+                'Как дела?',
+                'Что такое сервопривод?',
+                'Помоги с программированием',
+                'Спасибо за помощь!'
+            ];
+            
+            addResult('chatResults', `Тестирование ${messages.length} сообщений...`, 'info');
+            
+            for (let i = 0; i < messages.length; i++) {
+                const message = messages[i];
+                addResult('chatResults', `Тест ${i + 1}/${messages.length}: "${message}"`, 'info');
+                
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addResult('chatResults', `✅ Ответ получен (${data.response.length} символов)`, 'pass');
+                    } else {
+                        addResult('chatResults', `❌ HTTP ${response.status}`, 'fail');
+                    }
+                } catch (error) {
+                    addResult('chatResults', `❌ Ошибка: ${error.message}`, 'fail');
+                }
+                
+                // Небольшая пауза между запросами
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testChatPerformance() {
+            const testMessage = 'Тест производительности чата';
+            const iterations = 5;
+            
+            addResult('chatResults', `Тест производительности: ${iterations} запросов`, 'info');
+            
+            const times = [];
+            
+            for (let i = 0; i < iterations; i++) {
+                const startTime = performance.now();
+                
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `${testMessage} ${i + 1}` })
+                    });
+                    
+                    const endTime = performance.now();
+                    const responseTime = endTime - startTime;
+                    times.push(responseTime);
+                    
+                    if (response.ok) {
+                        addResult('chatResults', `✅ Запрос ${i + 1}: ${responseTime.toFixed(2)}мс`, 'pass');
+                    } else {
+                        addResult('chatResults', `❌ Запрос ${i + 1}: HTTP ${response.status}`, 'fail');
+                    }
+                } catch (error) {
+                    addResult('chatResults', `❌ Запрос ${i + 1}: ${error.message}`, 'fail');
+                }
+            }
+            
+            if (times.length > 0) {
+                const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+                const maxTime = Math.max(...times);
+                const minTime = Math.min(...times);
+                
+                addResult('chatResults', 
+                    `📊 Статистика: Среднее: ${avgTime.toFixed(2)}мс, Макс: ${maxTime.toFixed(2)}мс, Мин: ${minTime.toFixed(2)}мс`, 
+                    'info');
+            }
+        }
+
+        async function testCodeAnalysis() {
+            const code = document.getElementById('codeInput').value;
+            if (!code.trim()) {
+                addResult('codeResults', '❌ Введите код для анализа', 'fail');
+                return;
+            }
+            
+            addResult('codeResults', 'Анализ кода...', 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/api/code/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        code: code, 
+                        language: 'python' 
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('codeResults', `✅ Анализ завершен. Оценка качества: ${data.quality_score || 'N/A'}`, 'pass');
+                    
+                    if (data.issues && data.issues.length > 0) {
+                        addResult('codeResults', `Найдено проблем: ${data.issues.length}`, 'warn');
+                    }
+                    
+                    if (data.recommendations && data.recommendations.length > 0) {
+                        addResult('codeResults', `Рекомендаций: ${data.recommendations.length}`, 'info');
+                    }
+                } else {
+                    addResult('codeResults', `❌ HTTP ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                addResult('codeResults', `❌ Ошибка: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testMultipleLanguages() {
+            const testCases = [
+                { code: 'def hello():\n    print("Hello")', language: 'python' },
+                { code: 'if (x > 0) {\n    printf("Positive");\n}', language: 'c' },
+                { code: 'SELECT * FROM users;', language: 'sql' }
+            ];
+            
+            addResult('codeResults', `Тестирование ${testCases.length} языков программирования...`, 'info');
+            
+            for (const testCase of testCases) {
+                addResult('codeResults', `Тест ${testCase.language}...`, 'info');
+                
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/code/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testCase)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addResult('codeResults', `✅ ${testCase.language}: анализ успешен`, 'pass');
+                    } else {
+                        addResult('codeResults', `❌ ${testCase.language}: HTTP ${response.status}`, 'fail');
+                    }
+                } catch (error) {
+                    addResult('codeResults', `❌ ${testCase.language}: ${error.message}`, 'fail');
+                }
+            }
+        }
+
+        async function testFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                addResult('uploadResults', '❌ Выберите файл для загрузки', 'fail');
+                return;
+            }
+            
+            addResult('uploadResults', `Загрузка файла: ${file.name}`, 'info');
+            
+            try {
+                const content = await file.text();
+                
+                const response = await fetch(`${SERVER_URL}/api/documents/upload-content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        content: content,
+                        category: 'test',
+                        tags: ['test', 'upload']
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('uploadResults', `✅ Файл загружен: ${data.message || 'OK'}`, 'pass');
+                } else {
+                    addResult('uploadResults', `❌ HTTP ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                addResult('uploadResults', `❌ Ошибка: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testTextUpload() {
+            const testContent = `Тестовый документ для проверки загрузки
+Создан: ${new Date().toLocaleString()}
+Содержание: Проверка функциональности загрузки текста в базу данных Rubin AI`;
+
+            addResult('uploadResults', 'Загрузка тестового текста...', 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/api/documents/upload-content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: 'test_document.txt',
+                        content: testContent,
+                        category: 'test',
+                        tags: ['test', 'text', 'upload']
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('uploadResults', `✅ Текст загружен: ${data.message || 'OK'}`, 'pass');
+                } else {
+                    addResult('uploadResults', `❌ HTTP ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                addResult('uploadResults', `❌ Ошибка: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testDatabaseStats() {
+            addResult('uploadResults', 'Запрос статистики базы данных...', 'info');
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/api/documents/stats`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('uploadResults', `✅ Статистика получена: ${JSON.stringify(data)}`, 'pass');
+                } else {
+                    addResult('uploadResults', `❌ HTTP ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                addResult('uploadResults', `❌ Ошибка: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runFullCycleTest() {
+            addResult('fullCycleResults', '🚀 Запуск полного цикла тестирования...', 'info');
+            
+            // Тест 1: Подключение к серверу
+            addResult('fullCycleResults', 'Тест 1: Проверка подключения к серверу', 'info');
+            await testServerConnection();
+            
+            // Тест 2: Отправка сообщения
+            addResult('fullCycleResults', 'Тест 2: Отправка сообщения в чат', 'info');
+            document.getElementById('chatInput').value = 'Полный цикл тестирования Rubin AI';
+            await testChatMessage();
+            
+            // Тест 3: Анализ кода
+            addResult('fullCycleResults', 'Тест 3: Анализ кода', 'info');
+            document.getElementById('codeInput').value = 'def test_function():\n    return "test"';
+            await testCodeAnalysis();
+            
+            // Тест 4: Загрузка документа
+            addResult('fullCycleResults', 'Тест 4: Загрузка документа', 'info');
+            await testTextUpload();
+            
+            addResult('fullCycleResults', '✅ Полный цикл тестирования завершен!', 'pass');
+        }
+
+        async function runPerformanceTest() {
+            addResult('fullCycleResults', '⚡ Запуск теста производительности...', 'info');
+            
+            const startTime = performance.now();
+            
+            // Параллельные запросы
+            const promises = [];
+            for (let i = 0; i < 5; i++) {
+                promises.push(
+                    fetch(`${SERVER_URL}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `Тест производительности ${i + 1}` })
+                    })
+                );
+            }
+            
+            try {
+                const responses = await Promise.all(promises);
+                const endTime = performance.now();
+                const totalTime = endTime - startTime;
+                
+                const successCount = responses.filter(r => r.ok).length;
+                addResult('fullCycleResults', 
+                    `✅ Тест производительности завершен: ${successCount}/5 успешных запросов за ${totalTime.toFixed(2)}мс`, 
+                    'pass');
+            } catch (error) {
+                addResult('fullCycleResults', `❌ Ошибка теста производительности: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runErrorHandlingTest() {
+            addResult('fullCycleResults', '🛡️ Запуск теста обработки ошибок...', 'info');
+            
+            const errorTests = [
+                { name: 'Пустое сообщение', data: { message: '' } },
+                { name: 'Очень длинное сообщение', data: { message: 'x'.repeat(10000) } },
+                { name: 'Несуществующий endpoint', url: '/api/nonexistent' }
+            ];
+            
+            for (const test of errorTests) {
+                addResult('fullCycleResults', `Тест: ${test.name}`, 'info');
+                
+                try {
+                    const url = test.url ? `${SERVER_URL}${test.url}` : `${SERVER_URL}/api/chat`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(test.data || {})
+                    });
+                    
+                    if (response.status >= 400) {
+                        addResult('fullCycleResults', `✅ ${test.name}: корректно обработана ошибка (HTTP ${response.status})`, 'pass');
+                    } else {
+                        addResult('fullCycleResults', `⚠️ ${test.name}: неожиданный статус (HTTP ${response.status})`, 'warn');
+                    }
+                } catch (error) {
+                    addResult('fullCycleResults', `✅ ${test.name}: корректно обработана ошибка (${error.message})`, 'pass');
+                }
+            }
+        }
+
+        // Автоматическая проверка подключения при загрузке страницы
+        window.addEventListener('load', () => {
+            testServerConnection();
+        });
+    </script>
+</body>
+</html>

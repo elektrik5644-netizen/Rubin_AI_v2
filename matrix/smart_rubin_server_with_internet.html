@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Rubin AI - Умный чат</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.rubin {
+            background: white;
+            color: #333;
+            margin-right: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #48bb78;
+            box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+        }
+
+        .status-offline {
+            background: #e53e3e;
+            box-shadow: 0 0 10px rgba(229, 62, 62, 0.5);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🧠 Smart Rubin AI</h1>
+            <p>
+                <span class="status-indicator status-online" id="statusIndicator"></span>
+                Умный чат с поддержкой интернет-поиска
+            </p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                Привет! Я Smart Rubin AI. Задавайте вопросы по промышленной автоматизации, программированию, электротехнике и другим техническим темам!
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Smart Rubin AI думает...</p>
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" id="messageInput" class="chat-input" placeholder="Задайте вопрос..." onkeypress="handleKeyPress(event)">
+            <button class="send-button" onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        let isOnline = false;
+
+        // Проверка статуса сервера
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:8083/health');
+                if (response.ok) {
+                    isOnline = true;
+                    document.getElementById('statusIndicator').className = 'status-indicator status-online';
+                } else {
+                    isOnline = false;
+                    document.getElementById('statusIndicator').className = 'status-indicator status-offline';
+                }
+            } catch (error) {
+                isOnline = false;
+                document.getElementById('statusIndicator').className = 'status-indicator status-offline';
+            }
+        }
+
+        // Добавление сообщения в чат
+        function addMessage(sender, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Отправка сообщения
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            // Добавляем сообщение пользователя
+            addMessage('user', message);
+            messageInput.value = '';
+            
+            // Показываем загрузку
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                if (isOnline) {
+                    // Отправляем запрос к серверу
+                    const response = await fetch('http://localhost:8083/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            user_id: 'web_user'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addMessage('rubin', data.response || 'Ответ получен');
+                    } else {
+                        addMessage('rubin', 'Ошибка сервера. Попробуйте позже.');
+                    }
+                } else {
+                    addMessage('rubin', 'Сервер недоступен. Работаю в офлайн режиме.');
+                }
+            } catch (error) {
+                addMessage('rubin', 'Ошибка соединения. Проверьте подключение к серверу.');
+            } finally {
+                // Скрываем загрузку
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Обработка нажатия Enter
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+            // Проверяем статус каждые 30 секунд
+            setInterval(checkServerStatus, 30000);
+        });
+    </script>
+</body>
+</html>

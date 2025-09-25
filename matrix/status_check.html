@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка Статуса Rubin AI v2.0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .module {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .status-online {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .status-offline {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .status-checking {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .online { background-color: #28a745; }
+        .offline { background-color: #dc3545; }
+        .checking { background-color: #ffc107; }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Проверка Статуса Rubin AI v2.0</h1>
+        
+        <div class="module status-checking" id="main">
+            <div>
+                <span class="status-indicator checking"></span>
+                <strong>AI Чат (Основной сервер)</strong> - Порт 8084
+            </div>
+            <div id="main-status">Проверка...</div>
+        </div>
+        
+        <div class="module status-checking" id="electrical">
+            <div>
+                <span class="status-indicator checking"></span>
+                <strong>Электротехника</strong> - Порт 8087
+            </div>
+            <div id="electrical-status">Проверка...</div>
+        </div>
+        
+        <div class="module status-checking" id="radiomechanics">
+            <div>
+                <span class="status-indicator checking"></span>
+                <strong>Радиомеханика</strong> - Порт 8089
+            </div>
+            <div id="radiomechanics-status">Проверка...</div>
+        </div>
+        
+        <div class="module status-checking" id="controllers">
+            <div>
+                <span class="status-indicator checking"></span>
+                <strong>Контроллеры</strong> - Порт 8090
+            </div>
+            <div id="controllers-status">Проверка...</div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="checkAllStatus()">🔄 Проверить Все</button>
+            <button class="btn" onclick="openAllModules()">🌐 Открыть Все</button>
+        </div>
+        
+        <div class="log" id="log">
+            <div>Инициализация проверки статуса...</div>
+        </div>
+    </div>
+
+    <script>
+        const modules = {
+            main: { port: 8084, name: 'AI Чат', url: 'http://localhost:8084/health' },
+            electrical: { port: 8087, name: 'Электротехника', url: 'http://localhost:8087/api/electrical/status' },
+            radiomechanics: { port: 8089, name: 'Радиомеханика', url: 'http://localhost:8089/api/radiomechanics/status' },
+            controllers: { port: 8090, name: 'Контроллеры', url: 'http://localhost:8090/api/controllers/status' }
+        };
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(moduleKey, isOnline) {
+            const moduleDiv = document.getElementById(moduleKey);
+            const statusDiv = document.getElementById(`${moduleKey}-status`);
+            const indicator = moduleDiv.querySelector('.status-indicator');
+            
+            if (isOnline) {
+                moduleDiv.className = 'module status-online';
+                indicator.className = 'status-indicator online';
+                statusDiv.textContent = 'ОНЛАЙН';
+            } else {
+                moduleDiv.className = 'module status-offline';
+                indicator.className = 'status-indicator offline';
+                statusDiv.textContent = 'ОФФЛАЙН';
+            }
+        }
+
+        async function checkModuleStatus(moduleKey) {
+            const module = modules[moduleKey];
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(module.url, { 
+                    method: 'GET',
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                
+                clearTimeout(timeoutId);
+                const isOnline = response.ok;
+                updateStatus(moduleKey, isOnline);
+                
+                if (isOnline) {
+                    log(`✅ ${module.name} - ОНЛАЙН`);
+                } else {
+                    log(`❌ ${module.name} - ОФФЛАЙН (HTTP ${response.status})`);
+                }
+                
+                return isOnline;
+            } catch (error) {
+                updateStatus(moduleKey, false);
+                log(`❌ ${module.name} - ОФФЛАЙН (${error.message})`);
+                return false;
+            }
+        }
+
+        async function checkAllStatus() {
+            log('🔄 Начинаем проверку всех модулей...');
+            
+            const promises = Object.keys(modules).map(moduleKey => checkModuleStatus(moduleKey));
+            const results = await Promise.all(promises);
+            const onlineCount = results.filter(r => r).length;
+            
+            log(`📊 Проверка завершена: ${onlineCount}/${results.length} модулей онлайн`);
+        }
+
+        function openAllModules() {
+            Object.keys(modules).forEach(moduleKey => {
+                const module = modules[moduleKey];
+                let url = module.url;
+                
+                if (moduleKey === 'main') {
+                    url = 'http://localhost:8084/RubinIDE.html';
+                }
+                
+                window.open(url, '_blank');
+            });
+            
+            log('🌐 Открыты все модули в новых вкладках');
+        }
+
+        // Автоматическая проверка при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Инициализация проверки статуса...');
+            checkAllStatus();
+            
+            // Автоматическая проверка каждые 30 секунд
+            setInterval(checkAllStatus, 30000);
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

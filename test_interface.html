@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Rubin AI v2</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1e1e1e; color: #fff; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #333; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #005a9e; }
+        .result { margin: 10px 0; padding: 10px; background: #2d2d30; border-radius: 3px; }
+        input { padding: 10px; margin: 5px; width: 300px; background: #2d2d30; color: white; border: 1px solid #555; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест Rubin AI v2</h1>
+        
+        <div class="test-section">
+            <h3>Тест 1: Запрос "привет"</h3>
+            <button onclick="testHello()">Отправить "привет"</button>
+            <div id="result1" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Тест 2: Произвольный запрос</h3>
+            <input type="text" id="customMessage" placeholder="Введите сообщение" value="Расчет мощности">
+            <button onclick="testCustom()">Отправить</button>
+            <div id="result2" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Тест 3: Статус системы</h3>
+            <button onclick="testStatus()">Проверить статус</button>
+            <div id="result3" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testHello() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = '⏳ Отправляем запрос...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'привет' })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <strong>Статус:</strong> ${response.status}<br>
+                    <strong>Категория:</strong> ${data.category}<br>
+                    <strong>Сервер:</strong> ${data.server}<br>
+                    <strong>Ответ:</strong> ${JSON.stringify(data.response, null, 2)}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testCustom() {
+            const message = document.getElementById('customMessage').value;
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = '⏳ Отправляем запрос...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <strong>Статус:</strong> ${response.status}<br>
+                    <strong>Категория:</strong> ${data.category}<br>
+                    <strong>Сервер:</strong> ${data.server}<br>
+                    <strong>Ответ:</strong> ${JSON.stringify(data.response, null, 2)}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testStatus() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '⏳ Проверяем статус...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/stats');
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <strong>Статус:</strong> ${response.status}<br>
+                    <strong>Система:</strong> ${data.system}<br>
+                    <strong>Версия:</strong> ${data.version}<br>
+                    <strong>Модули:</strong> ${JSON.stringify(data.modules, null, 2)}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Ошибка: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

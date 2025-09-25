@@ -1,0 +1,26 @@
+{
+  "qdrant": {
+    "host": "localhost",
+    "port": 6333,
+    "grpc_port": 6334,
+    "timeout": 30,
+    "use_embedded": true,
+    "collections": {
+      "rubin_knowledge": {
+        "vector_size": 384,
+        "distance": "Cosine",
+        "description": "База знаний Rubin AI"
+      },
+      "rubin_documents": {
+        "vector_size": 768,
+        "distance": "Cosine",
+        "description": "Документы и материалы"
+      },
+      "rubin_conversations": {
+        "vector_size": 384,
+        "distance": "Cosine",
+        "description": "История разговоров"
+      }
+    }
+  }
+}

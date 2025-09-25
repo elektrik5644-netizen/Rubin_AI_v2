@@ -1,0 +1,32 @@
+# Rubin AI Matrix Configuration
+# Database Configuration
+POSTGRES_USER=rubin
+POSTGRES_PASSWORD=rubin_matrix_2025
+POSTGRES_DB=rubin_ai
+
+# Qdrant Configuration
+QDRANT_HOST=qdrant_db
+QDRANT_PORT=6333
+
+# Ollama Configuration
+OLLAMA_HOST=ollama_service
+OLLAMA_PORT=11434
+
+# Gateway Configuration
+GATEWAY_PORT=8083
+GATEWAY_HOST=0.0.0.0
+
+# Security
+JWT_SECRET=rubin_matrix_jwt_secret_key_2025
+API_KEY=rubin_matrix_api_key_2025
+
+# GPU Configuration (если доступно)
+CUDA_VISIBLE_DEVICES=0
+
+# Compute Core Configuration
+COMPUTE_CORE_PORT=5000
+PMAC_CONNECTION_STRING=/dev/ttyUSB0
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FILE=matrix.log

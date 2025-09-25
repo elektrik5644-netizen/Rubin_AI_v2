@@ -1,0 +1,298 @@
+# Руководство по программированию
+
+## Основы программирования
+
+### Алгоритмы
+Алгоритм - это последовательность шагов для решения задачи.
+
+#### Основные структуры:
+1. **Последовательность** - выполнение команд по порядку
+2. **Ветвление** - выбор между вариантами
+3. **Циклы** - повторение действий
+
+### Языки программирования
+
+#### Python
+```python
+# Простой пример
+def factorial(n):
+    if n <= 1:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+# Использование
+result = factorial(5)
+print(f"5! = {result}")
+```
+
+#### C++
+```cpp
+#include <iostream>
+using namespace std;
+
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n-1);
+}
+
+int main() {
+    int result = factorial(5);
+    cout << "5! = " << result << endl;
+    return 0;
+}
+```
+
+#### JavaScript
+```javascript
+function factorial(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n-1);
+}
+
+const result = factorial(5);
+console.log(`5! = ${result}`);
+```
+
+## Структуры данных
+
+### Массивы
+```python
+# Python
+numbers = [1, 2, 3, 4, 5]
+print(numbers[0])  # Первый элемент
+print(len(numbers))  # Длина массива
+```
+
+### Списки
+```python
+# Динамический список
+fruits = ['apple', 'banana', 'orange']
+fruits.append('grape')  # Добавить элемент
+fruits.remove('banana')  # Удалить элемент
+```
+
+### Словари
+```python
+# Ассоциативный массив
+person = {
+    'name': 'John',
+    'age': 30,
+    'city': 'New York'
+}
+print(person['name'])  # Доступ к значению
+```
+
+## Объектно-ориентированное программирование
+
+### Классы и объекты
+```python
+class Car:
+    def __init__(self, brand, model, year):
+        self.brand = brand
+        self.model = model
+        self.year = year
+        self.speed = 0
+    
+    def accelerate(self, increment):
+        self.speed += increment
+    
+    def brake(self, decrement):
+        self.speed -= decrement
+    
+    def get_info(self):
+        return f"{self.year} {self.brand} {self.model}"
+
+# Создание объекта
+my_car = Car("Toyota", "Camry", 2020)
+my_car.accelerate(20)
+print(my_car.get_info())
+```
+
+## Обработка ошибок
+
+### Try-Except
+```python
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("Ошибка: деление на ноль")
+except Exception as e:
+    print(f"Произошла ошибка: {e}")
+finally:
+    print("Блок finally выполняется всегда")
+```
+
+## Работа с файлами
+
+### Чтение файла
+```python
+try:
+    with open('data.txt', 'r', encoding='utf-8') as file:
+        content = file.read()
+        print(content)
+except FileNotFoundError:
+    print("Файл не найден")
+```
+
+### Запись в файл
+```python
+data = "Привет, мир!"
+with open('output.txt', 'w', encoding='utf-8') as file:
+    file.write(data)
+```
+
+## Работа с базами данных
+
+### SQLite
+```python
+import sqlite3
+
+# Подключение к базе данных
+conn = sqlite3.connect('example.db')
+cursor = conn.cursor()
+
+# Создание таблицы
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE
+    )
+''')
+
+# Вставка данных
+cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", 
+               ("John Doe", "john@example.com"))
+
+# Выборка данных
+cursor.execute("SELECT * FROM users")
+rows = cursor.fetchall()
+for row in rows:
+    print(row)
+
+conn.commit()
+conn.close()
+```
+
+## Веб-разработка
+
+### Flask (Python)
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/api/data', methods=['POST'])
+def api_data():
+    data = request.get_json()
+    return {'status': 'success', 'data': data}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+## Тестирование
+
+### Unit тесты
+```python
+import unittest
+
+def add(a, b):
+    return a + b
+
+class TestMath(unittest.TestCase):
+    def test_add_positive(self):
+        self.assertEqual(add(2, 3), 5)
+    
+    def test_add_negative(self):
+        self.assertEqual(add(-1, -1), -2)
+    
+    def test_add_zero(self):
+        self.assertEqual(add(0, 5), 5)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+## Отладка
+
+### Логирование
+```python
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
+def process_data(data):
+    logger.info(f"Обработка данных: {data}")
+    try:
+        result = data * 2
+        logger.debug(f"Результат: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Ошибка обработки: {e}")
+        raise
+```
+
+## Оптимизация производительности
+
+### Профилирование
+```python
+import time
+import cProfile
+
+def slow_function():
+    time.sleep(1)
+    return sum(range(1000000))
+
+# Профилирование
+cProfile.run('slow_function()')
+```
+
+### Кэширование
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+```
+
+## Лучшие практики
+
+1. **Именование переменных** - используйте понятные имена
+2. **Комментарии** - документируйте сложную логику
+3. **Модульность** - разбивайте код на функции и классы
+4. **Обработка ошибок** - всегда обрабатывайте исключения
+5. **Тестирование** - пишите тесты для вашего кода
+6. **Версионирование** - используйте Git для контроля версий
+7. **Документация** - ведите документацию проекта
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

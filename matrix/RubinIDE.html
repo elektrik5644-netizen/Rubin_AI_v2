@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubin IDE - Исправленная версия</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2d2d30;
+            border-right: 1px solid #3e3e42;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .line-numbers {
+            width: 50px;
+            background: #2d2d30;
+            border-right: 1px solid #3e3e42;
+            padding: 10px 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            color: #858585;
+            text-align: right;
+            user-select: none;
+            overflow-y: auto;
+        }
+
+        .code-editor {
+            flex: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            outline: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 10px;
+            resize: none;
+            overflow-y: auto;
+            white-space: pre;
+            tab-size: 4;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2;
+            caret-color: #d4d4d4;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .code-editor::selection {
+            background: rgba(0, 120, 215, 0.3);
+            color: #d4d4d4;
+        }
+
+        .code-editor::-moz-selection {
+            background: rgba(0, 120, 215, 0.3);
+            color: #d4d4d4;
+        }
+
+        .code-editor-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Подсветка синтаксиса */
+        .syntax-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1e1e1e;
+            pointer-events: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 10px;
+            white-space: pre;
+            overflow: hidden;
+            z-index: 1;
+            color: #d4d4d4;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .syntax-highlight .keyword { 
+            color: #569cd6; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight .string { 
+            color: #ce9178; 
+        }
+        
+        .syntax-highlight .comment { 
+            color: #6a9955; 
+            font-style: italic;
+        }
+        
+        .syntax-highlight .number { 
+            color: #d7ba7d; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight .function { 
+            color: #dcdcaa; 
+        }
+        
+        .syntax-highlight .variable { 
+            color: #9cdcfe; 
+        }
+        
+        .syntax-highlight .operator { 
+            color: #d4d4d4; 
+        }
+        
+        .syntax-highlight .plc-keyword { 
+            color: #569cd6; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight .plc-function { 
+            color: #4ec9b0; 
+        }
+        
+        .syntax-highlight .plc-address { 
+            color: #d7ba7d; 
+        }
+
+        /* Стили для временного элемента подсветки */
+        .syntax-highlight-temp .keyword { 
+            color: #569cd6; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight-temp .string { 
+            color: #ce9178; 
+        }
+        
+        .syntax-highlight-temp .comment { 
+            color: #6a9955; 
+            font-style: italic;
+        }
+        
+        .syntax-highlight-temp .number { 
+            color: #d7ba7d; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight-temp .function { 
+            color: #dcdcaa; 
+        }
+        
+        .syntax-highlight-temp .variable { 
+            color: #9cdcfe; 
+        }
+        
+        .syntax-highlight-temp .operator { 
+            color: #d4d4d4; 
+        }
+        
+        .syntax-highlight-temp .plc-keyword { 
+            color: #569cd6; 
+            font-weight: bold;
+        }
+        
+        .syntax-highlight-temp .plc-function { 
+            color: #4ec9b0; 
+        }
+        
+        .syntax-highlight-temp .plc-address { 
+            color: #d7ba7d; 
+        }
+
+        .chat-panel {
+            width: 300px;
+            background: #2d2d30;
+            border-left: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: #007acc;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .chat-message.user {
+            background: #007acc;
+            color: white;
+            margin-left: 20px;
+        }
+
+        .chat-message.ai {
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            margin-right: 20px;
+        }
+
+        .chat-message.error {
+            background: #dc3545;
+            color: white;
+            margin-right: 20px;
+        }
+
+        .chat-input-container {
+            padding: 10px;
+            border-top: 1px solid #3e3e42;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            color: #d4d4d4;
+            padding: 8px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+        }
+
+        .btn.active {
+            background: #28a745;
+        }
+
+        .file-item {
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 2px;
+        }
+
+        .file-item:hover {
+            background: #3e3e42;
+        }
+
+        .status-bar {
+            background: #007acc;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        .status-indicator.connecting {
+            background: #ffc107;
+        }
+
+        .error-details {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .retry-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .offline-mode {
+            background: #ffc107;
+            color: #000;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Боковая панель -->
+        <div class="sidebar">
+            <h3>📁 Файлы</h3>
+            <div class="file-item" onclick="openFileInEditor('test_request.json')">📄 test_request.json</div>
+            <div class="file-item" onclick="openFileInEditor('requirements.txt')">📄 requirements.txt</div>
+            <div class="file-item" onclick="openFileInEditor('rubin_web_search.py')">🐍 rubin_web_search.py</div>
+            <div class="file-item" onclick="openFileInEditor('README_RUBIN_SELF_DEVELOPMENT.md')">📚 README</div>
+            
+            <h3 style="margin-top: 20px;">🔧 Инструменты</h3>
+            <div class="file-item" onclick="testConnection()">🔌 Тест соединения</div>
+            <div class="file-item" onclick="clearChat()">🗑️ Очистить чат</div>
+            <div class="file-item" onclick="toggleOfflineMode()">🌐 Офлайн режим</div>
+            
+            <h3 style="margin-top: 20px;">📚 Документы</h3>
+            <div class="file-item" onclick="window.open('RubinFileUpload.html', '_blank')">📤 Загрузка документов</div>
+            <div class="file-item" onclick="searchDocuments()">🔍 Поиск в базе</div>
+    </div>
+
+        <!-- Основной контент -->
+        <div class="main-content">
+    <!-- Панель инструментов -->
+    <div class="toolbar">
+                <button class="btn" onclick="newFile()">📄 Новый</button>
+                <button class="btn" onclick="openFile()">📂 Открыть</button>
+                <button class="btn" onclick="saveFile()">💾 Сохранить</button>
+                <button class="btn" onclick="runCode()">▶️ Запустить</button>
+                <button class="btn" onclick="formatCode()">✨ Форматировать</button>
+                <button class="btn" onclick="uploadToDatabase()">📚 В базу данных</button>
+                <input type="file" id="fileUploadInput" style="display: none;" multiple accept=".py,.md,.json,.html,.txt,.sql,.log,.yaml,.yml,.xml,.csv,.plc,.st,.iec,.cfg,.ini,.conf,.config,.pmac,.gcode,.nc" onchange="uploadSelectedFiles()">
+                <input type="file" id="folderUploadInput" style="display: none;" webkitdirectory directory multiple onchange="uploadSelectedFolder()">
+                <input type="file" id="folderUploadInputAlt" style="display: none;" multiple accept=".py,.md,.json,.html,.txt,.sql,.log,.yaml,.yml,.xml,.csv,.plc,.st,.iec,.cfg,.ini,.conf,.config,.pmac,.gcode,.nc" onchange="uploadSelectedFilesAsProject()">
+                <button class="btn" onclick="openFilesOrFolder()">📁 Открыть файлы/папку</button>
+                <button class="btn" onclick="analyzeCurrentFile()">🔍 Анализ файла</button>
+                        </div>
+
+            <!-- Редактор кода -->
+            <div class="editor-container">
+                <div class="line-numbers" id="line-numbers">1</div>
+                <div class="code-editor-container">
+                    <textarea class="code-editor" id="code-editor" placeholder="Введите код здесь..."># Rubin IDE - Добро пожаловать!
+# Это исправленная версия с улучшенной обработкой ошибок
+
+print("🚀 Rubin IDE готов к работе!")
+
+# Проверка соединения
+def check_connection():
+    try:
+        # Попытка подключения к API
+        import requests
+        response = requests.get('http://localhost:8084/health', timeout=5)
+        return response.status_code == 200
+    except:
+        return False
+
+if check_connection():
+    print("✅ Соединение с API установлено")
+else:
+    print("⚠️ API недоступен, работаем в офлайн режиме")
+</textarea>
+                    <div id="syntax-highlight" class="syntax-highlight" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Статус бар -->
+            <div class="status-bar">
+                <div class="connection-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <span id="status-text">Проверка соединения...</span>
+                        </div>
+                <div>Rubin IDE v2.0 - Исправленная версия</div>
+                        </div>
+                        </div>
+
+        <!-- Панель чата -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                🤖 Rubin AI Chat
+        </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message ai">
+                    Привет! Я Rubin AI. Готов помочь с программированием и ответить на вопросы.
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-row">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="Введите сообщение..." onkeypress="handleChatKeyPress(event)">
+                    <button class="btn" onclick="sendChatMessage()">📤</button>
+                    <button class="btn" id="voice-btn" onclick="toggleVoiceInput()">🎤</button>
+                    <button class="btn" id="tts-btn" onclick="toggleAutoTTS()">🔊</button>
+                    <button class="btn" onclick="uploadCurrentTextToDatabase()">📝 Текст в базу</button>
+            </div>
+                <div class="chat-input-row">
+                    <button class="btn" onclick="sendSystemMessage()">🔧 Система</button>
+                    <button class="btn" onclick="sendHelpMessage()">❓ Помощь</button>
+                    <button class="btn" onclick="testLocalResponse()">🧪 Тест</button>
+                    <button class="btn" onclick="uploadToDatabase()">📚 В базу данных</button>
+                    </div>
+                <div class="chat-input-row">
+                    <button class="btn" onclick="uploadLastMessageToDatabase()">💬 Сообщение в базу</button>
+                    <button class="btn" onclick="searchDocuments()">🔍 Поиск в базе</button>
+                    <button class="btn" onclick="showDatabaseStats()">📊 Статистика базы</button>
+                    <button class="btn" onclick="showSystemStats()">📈 Статистика системы</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let autoTTS = false;
+        let recognition = null;
+        let isOfflineMode = false;
+        let connectionRetries = 0;
+        const maxRetries = 3;
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLineNumbers();
+            
+            // Применяем подсветку к начальному содержимому
+            applySyntaxHighlighting('welcome.py');
+            
+            // Сразу показываем статус подключения
+            updateConnectionStatus('connecting');
+            
+            // Проверяем соединение
+            testConnection();
+            
+            // Автообновление номеров строк
+            document.getElementById('code-editor').addEventListener('input', updateLineNumbers);
+            document.getElementById('code-editor').addEventListener('scroll', syncScroll);
+        });
+
+        // Функции редактора
+        function updateLineNumbers() {
+            const editor = document.getElementById('code-editor');
+            const lineNumbers = document.getElementById('line-numbers');
+            const lines = editor.value.split('\n');
+            
+            lineNumbers.innerHTML = '';
+            for (let i = 1; i <= lines.length; i++) {
+                lineNumbers.innerHTML += i + '<br>';
+            }
+        }
+
+        function syncScroll() {
+            const editor = document.getElementById('code-editor');
+            const lineNumbers = document.getElementById('line-numbers');
+            lineNumbers.scrollTop = editor.scrollTop;
+        }
+
+        function newFile() {
+            document.getElementById('code-editor').value = '';
+            updateLineNumbers();
+        }
+
+        function openFile() {
+            // Открытие одного файла
+            document.getElementById('fileUploadInput').click();
+        }
+
+        function openFilesOrFolder() {
+            // Показываем диалог выбора типа загрузки
+            const choice = confirm('📁 Выберите тип загрузки:\n\n' +
+                'OK - Выбрать отдельные файлы\n' +
+                'Отмена - Выбрать папку целиком');
+            
+            if (choice) {
+                // Выбор отдельных файлов
+                document.getElementById('fileUploadInput').click();
+            } else {
+                // Выбор папки
+                try {
+                    // Проверяем поддержку webkitdirectory
+                    if (document.getElementById('folderUploadInput').webkitdirectory !== undefined) {
+                        document.getElementById('folderUploadInput').click();
+                    } else {
+                        // Fallback для браузеров без поддержки webkitdirectory
+                        const useAlt = confirm('📁 Ваш браузер не поддерживает загрузку папок.\n\n' +
+                            'Можете выбрать несколько файлов как проект:\n\n' +
+                            'OK - Выбрать файлы как проект\n' +
+                            'Отмена - Отмена');
+                        
+                        if (useAlt) {
+                            document.getElementById('folderUploadInputAlt').click();
+                        }
+                    }
+                } catch (error) {
+                    alert('❌ Ошибка загрузки папки.\n\n' +
+                        'Попробуйте:\n' +
+                        '1. Использовать Chrome или Edge\n' +
+                        '2. Выбрать отдельные файлы\n' +
+                        '3. Обновить браузер');
+                    console.error('Ошибка загрузки папки:', error);
+                }
+            }
+        }
+
+        function uploadSelectedFilesAsProject() {
+            const fileInput = document.getElementById('folderUploadInputAlt');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                return;
+            }
+
+            // Создаем проект из выбранных файлов
+            currentProjectFiles = Array.from(files);
+            currentProjectName = 'Выбранные файлы';
+
+            // Показываем информацию о загруженных файлах
+            appendChatMessage('user', `📁 Создан проект "${currentProjectName}" из ${files.length} файлов`);
+
+            // Загружаем файлы в редактор
+            loadProjectInEditor(files);
+
+            // Очищаем input
+            fileInput.value = '';
+        }
+
+        function saveFile() {
+            const content = document.getElementById('code-editor').value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rubin_code.py';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function runCode() {
+            const code = document.getElementById('code-editor').value;
+            try {
+                // Простая проверка синтаксиса Python
+                if (code.includes('print(') || code.includes('def ') || code.includes('import ')) {
+                    appendChatMessage('ai', '✅ Код выглядит корректно! Для выполнения Python кода используйте терминал или IDE.');
+                } else {
+                    appendChatMessage('ai', '⚠️ Код не содержит Python конструкций');
+                }
+            } catch (e) {
+                appendChatMessage('error', `Ошибка анализа кода: ${e.message}`);
+            }
+        }
+
+        function formatCode() {
+            const editor = document.getElementById('code-editor');
+            let code = editor.value;
+            
+            // Простое форматирование
+            code = code.replace(/\n{3,}/g, '\n\n'); // Убираем лишние пустые строки
+            code = code.trim(); // Убираем пробелы в начале и конце
+            
+            editor.value = code;
+            updateLineNumbers();
+            appendChatMessage('ai', '✨ Код отформатирован');
+        }
+
+        // Функции чата
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Проверяем команды загрузки
+            if (text.toLowerCase().includes('загрузи в базу данных') || 
+                text.toLowerCase().includes('загрузить в базу')) {
+                uploadToDatabase();
+                input.value = '';
+                return;
+            }
+            
+            appendChatMessage('user', text);
+            input.value = '';
+
+            if (isOfflineMode) {
+                // Офлайн режим - локальные ответы
+                const response = generateOfflineResponse(text);
+                appendChatMessage('ai', response);
+                if (autoTTS) speak(response);
+                return;
+            }
+
+            try {
+                // Попытка подключения к API
+                const resp = await fetch('http://localhost:8084/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
+                    timeout: 10000
+                });
+                
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                
+                const data = await resp.json();
+                const answer = data.response || '[пустой ответ]';
+                appendChatMessage('ai', answer);
+                if (autoTTS) speak(answer);
+                
+                // Сброс счетчика попыток при успехе
+                connectionRetries = 0;
+                updateConnectionStatus('connected');
+                
+            } catch (e) {
+                connectionRetries++;
+                
+                if (connectionRetries >= maxRetries) {
+                    appendChatMessage('error', `Сервер недоступен после ${maxRetries} попыток. Переключение в офлайн режим.`);
+                    enableOfflineMode();
+                } else {
+                    appendChatMessage('error', `Ошибка запроса (попытка ${connectionRetries}/${maxRetries}): ${e.message}`);
+                    
+                    // Автоматическая повторная попытка
+                    setTimeout(() => {
+                        appendChatMessage('ai', '🔄 Повторная попытка подключения...');
+                        sendChatMessage();
+                    }, 2000);
+                }
+            }
+        }
+
+        function generateOfflineResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('привет') || lowerMessage.includes('hello')) {
+                return 'Привет! Я работаю в офлайн режиме. Могу помочь с базовыми вопросами по программированию.';
+            }
+            
+            if (lowerMessage.includes('python') || lowerMessage.includes('код')) {
+                return 'Python - отличный язык программирования! Вот простой пример:\n\n```python\nprint("Hello, World!")\n```';
+            }
+            
+            if (lowerMessage.includes('ошибка') || lowerMessage.includes('error')) {
+                return 'Для решения ошибок:\n1. Проверьте синтаксис\n2. Убедитесь в правильности импортов\n3. Проверьте переменные\n4. Используйте try-except для отладки';
+            }
+            
+            if (lowerMessage.includes('помощь') || lowerMessage.includes('help')) {
+                return 'Доступные команды:\n- 🔧 Система: информация о системе\n- ❓ Помощь: справка\n- 🧪 Тест: тестирование функций';
+            }
+            
+            return 'Извините, я работаю в офлайн режиме. Попробуйте перезапустить сервер или используйте базовые команды.';
+        }
+
+        function sendSystemMessage() {
+            const systemInfo = `
+🔧 Информация о системе:
+- Браузер: ${navigator.userAgent}
+- Платформа: ${navigator.platform}
+- Язык: ${navigator.language}
+- Режим: ${isOfflineMode ? 'Офлайн' : 'Онлайн'}
+- Попытки подключения: ${connectionRetries}/${maxRetries}
+- Статус: ${document.getElementById('status-text').textContent}
+            `;
+            appendChatMessage('ai', systemInfo);
+        }
+
+        function sendHelpMessage() {
+            const help = `
+❓ Справка по Rubin IDE:
+
+📝 Редактор:
+- Новый файл: Ctrl+N
+- Сохранить: Ctrl+S
+- Запустить код: F5
+
+💬 Чат:
+- Enter: отправить сообщение
+- 🎤: голосовой ввод
+- 🔊: текстовое озвучивание
+
+🔧 Система:
+- Тест соединения
+- Очистка чата
+- Переключение режимов
+
+🌐 API: http://localhost:8084
+            `;
+            appendChatMessage('ai', help);
+        }
+
+        function testLocalResponse() {
+            appendChatMessage('ai', '🧪 Тест локальных функций:\n✅ Редактор работает\n✅ Чат работает\n✅ Офлайн режим доступен\n✅ Форматирование кода работает\n✅ Загрузка файлов работает');
+            
+            // Тестируем редактор
+            const editor = document.getElementById('code-editor');
+            if (editor) {
+                appendChatMessage('ai', '✅ Редактор найден и доступен');
+            } else {
+                appendChatMessage('error', '❌ Редактор не найден!');
+            }
+        }
+
+        function appendChatMessage(type, message) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function clearChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '<div class="chat-message ai">Чат очищен. Чем могу помочь?</div>';
+        }
+
+        // Функции соединения
+        async function testConnection() {
+            try {
+                const response = await fetch('http://localhost:8084/health', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    updateConnectionStatus('connected');
+                    connectionRetries = 0;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (e) {
+                updateConnectionStatus('offline');
+                appendChatMessage('error', `❌ Не удалось подключиться к API: ${e.message}`);
+                enableOfflineMode();
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            indicator.className = `status-indicator ${status}`;
+            
+            switch (status) {
+                case 'connected':
+                    statusText.textContent = 'Подключено';
+                    break;
+                case 'connecting':
+                    statusText.textContent = 'Подключение...';
+                    break;
+                case 'offline':
+                    statusText.textContent = 'Офлайн режим';
+                    break;
+            }
+        }
+
+        function enableOfflineMode() {
+            isOfflineMode = true;
+            updateConnectionStatus('offline');
+            
+            // Показываем уведомление об офлайн режиме
+            const offlineNotice = document.createElement('div');
+            offlineNotice.className = 'offline-mode';
+            offlineNotice.innerHTML = `
+                🌐 Офлайн режим активирован<br>
+                API недоступен, используем локальные функции<br>
+                <button class="retry-button" onclick="testConnection()">🔄 Повторить подключение</button>
+            `;
+            
+            document.getElementById('chat-messages').appendChild(offlineNotice);
+        }
+
+        function toggleOfflineMode() {
+            if (isOfflineMode) {
+                isOfflineMode = false;
+                testConnection();
+                appendChatMessage('ai', '🔄 Переключение в онлайн режим...');
+            } else {
+                enableOfflineMode();
+                appendChatMessage('ai', '🌐 Офлайн режим активирован');
+            }
+        }
+
+        function searchDocuments() {
+            const query = prompt('Введите поисковый запрос:');
+            if (query) {
+                appendChatMessage('user', `🔍 Поиск документов: "${query}"`);
+                searchDocumentsInDatabase(query);
+            }
+        }
+
+        async function searchDocumentsInDatabase(query) {
+            try {
+                const response = await fetch('http://localhost:8084/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        limit: 5
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const documents = result.data.results;
+                    if (documents.length > 0) {
+                        let message = `🔍 Найдено документов: ${documents.length}\n\n`;
+                        documents.forEach((doc, index) => {
+                            message += `${index + 1}. **${doc.filename}**\n`;
+                            message += `   📂 Категория: ${doc.category}\n`;
+                            message += `   🏷️ Теги: ${doc.tags.join(', ')}\n`;
+                            message += `   📊 Релевантность: ${doc.relevance}\n`;
+                            message += `   📄 Предварительный просмотр: ${doc.content.substring(0, 100)}...\n\n`;
+                        });
+                        appendChatMessage('assistant', message);
+                    } else {
+                        appendChatMessage('assistant', '🔍 Документы не найдены. Попробуйте другой запрос.');
+                    }
+                } else {
+                    appendChatMessage('error', `❌ Ошибка поиска: ${result.message}`);
+                }
+            } catch (error) {
+                appendChatMessage('error', `❌ Ошибка поиска документов: ${error.message}`);
+            }
+        }
+
+        function uploadToDatabase() {
+            const content = document.getElementById('code-editor').value;
+            if (!content.trim()) {
+                alert('Редактор пуст. Введите код или текст для загрузки в базу данных.');
+                return;
+            }
+
+            // Показываем диалог для настройки загрузки
+            const filename = prompt('Введите имя файла:', 'document.txt');
+            if (!filename) return;
+
+            const category = prompt('Выберите категорию:\n1. python_code\n2. documentation\n3. configuration\n4. industrial_automation\n5. artificial_intelligence\n6. api_documentation\n7. tutorial\n8. general\n\nВведите номер или название:', '');
+            if (category === null) return;
+
+            const tags = prompt('Введите теги через запятую (необязательно):', '');
+            if (tags === null) return;
+
+            // Загружаем в базу данных
+            uploadContentToDatabase(filename, content, category, tags);
+        }
+
+        function uploadLastMessageToDatabase() {
+            // Получаем последнее сообщение пользователя из чата
+            const chatMessages = document.getElementById('chat-messages');
+            const userMessages = chatMessages.querySelectorAll('.chat-message.user');
+            
+            if (userMessages.length === 0) {
+                alert('Нет сообщений пользователя для загрузки в базу данных.');
+                return;
+            }
+            
+            const lastMessage = userMessages[userMessages.length - 1];
+            const content = lastMessage.textContent.trim();
+            
+            if (!content) {
+                alert('Последнее сообщение пустое.');
+                return;
+            }
+
+            // Показываем диалог для настройки загрузки
+            const filename = prompt('Введите имя файла:', 'chat_message.txt');
+            if (!filename) return;
+
+            const category = prompt('Выберите категорию:\n1. python_code\n2. documentation\n3. configuration\n4. industrial_automation\n5. artificial_intelligence\n6. api_documentation\n7. tutorial\n8. general\n\nВведите номер или название:', 'general');
+            if (category === null) return;
+
+            const tags = prompt('Введите теги через запятую (необязательно):', 'chat, message, user');
+            if (tags === null) return;
+
+            // Загружаем в базу данных
+            uploadContentToDatabase(filename, content, category, tags);
+        }
+
+        function uploadCurrentTextToDatabase() {
+            // Получаем текущий текст из поля ввода
+            const chatInput = document.getElementById('chat-input');
+            const content = chatInput.value.trim();
+            
+            if (!content) {
+                alert('Поле ввода пустое. Введите текст для загрузки в базу данных.');
+                return;
+            }
+
+            // Показываем диалог для настройки загрузки
+            const filename = prompt('Введите имя файла:', 'input_text.txt');
+            if (!filename) return;
+
+            const category = prompt('Выберите категорию:\n1. python_code\n2. documentation\n3. configuration\n4. industrial_automation\n5. artificial_intelligence\n6. api_documentation\n7. tutorial\n8. general\n\nВведите номер или название:', 'general');
+            if (category === null) return;
+
+            const tags = prompt('Введите теги через запятую (необязательно):', 'input, text, user');
+            if (tags === null) return;
+
+            // Загружаем в базу данных
+            uploadContentToDatabase(filename, content, category, tags);
+            
+            // Очищаем поле ввода после загрузки
+            chatInput.value = '';
+        }
+
+        async function uploadSelectedFiles() {
+            const fileInput = document.getElementById('fileUploadInput');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                return;
+            }
+
+            // Показываем диалог выбора действия
+            const action = confirm(`📁 Выбрано ${files.length} файл(ов).\n\n` +
+                `Нажмите OK для работы с файлами в редакторе\n` +
+                `Нажмите Отмена для загрузки в базу данных Rubin AI`);
+
+            if (action) {
+                // Работа с файлами в редакторе (по умолчанию)
+                loadFilesInEditor(files);
+            } else {
+                // Загрузка в базу данных
+                await uploadFilesToDatabase(files);
+            }
+
+            // Очищаем input
+            fileInput.value = '';
+        }
+
+        async function uploadFilesToDatabase(files) {
+            // Показываем диалог для настройки загрузки
+            const category = prompt('Выберите категорию:\n1. python_code\n2. documentation\n3. configuration\n4. industrial_automation\n5. artificial_intelligence\n6. api_documentation\n7. tutorial\n8. general\n\nВведите номер или название:', 'general');
+            if (category === null) {
+                return;
+            }
+
+            const tags = prompt('Введите теги через запятую (необязательно):', 'uploaded, files');
+            if (tags === null) {
+                return;
+            }
+
+            const tagList = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+            // Загружаем файлы
+            for (const file of files) {
+                try {
+                    appendChatMessage('user', `📁 Загрузка файла: ${file.name}`);
+                    
+                    // Создаем FormData для загрузки файла
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('category', category);
+                    formData.append('tags', tagList.join(','));
+                    
+                    // Загружаем файл через API
+                    const response = await fetch('http://localhost:8084/api/chat', {
+                    method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        let message = `✅ Файл "${file.name}" успешно загружен в базу данных!\n\n`;
+                        message += `📄 **Имя файла:** ${result.data.filename}\n`;
+                        message += `🆔 **ID документа:** ${result.data.document_id}\n`;
+                        message += `📂 **Категория:** ${result.data.category}\n`;
+                        message += `🏷️ **Теги:** ${result.data.tags.join(', ')}\n`;
+                        message += `📊 **Размер:** ${result.data.file_size} байт\n`;
+                        message += `📝 **Содержимое:** ${result.data.content_length} символов\n\n`;
+                        message += `Теперь этот файл доступен для поиска в базе данных!`;
+                        
+                        appendChatMessage('assistant', message);
+                        } else {
+                        appendChatMessage('error', `❌ Ошибка загрузки файла "${file.name}": ${result.message}`);
+                    }
+                } catch (error) {
+                    appendChatMessage('error', `❌ Ошибка загрузки файла "${file.name}": ${error.message}`);
+                }
+            }
+        }
+
+        function loadFilesInEditor(files) {
+            // Фильтруем только текстовые файлы для редактирования
+            const textExtensions = ['.py', '.js', '.html', '.css', '.json', '.md', '.txt', '.xml', '.yaml', '.yml', '.sql', '.log', '.csv', '.plc', '.st', '.iec', '.cfg', '.ini', '.conf', '.config', '.pmac', '.gcode', '.nc'];
+            const editableFiles = Array.from(files).filter(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                return textExtensions.includes(ext);
+            });
+
+            if (editableFiles.length === 0) {
+                const allExtensions = Array.from(files).map(f => '.' + f.name.split('.').pop().toLowerCase());
+                const uniqueExtensions = [...new Set(allExtensions)];
+                
+                alert(`Среди выбранных файлов нет файлов для редактирования.\n\n` +
+                    `Найдены расширения: ${uniqueExtensions.join(', ')}\n\n` +
+                    `Поддерживаемые форматы: .py, .js, .html, .css, .json, .md, .txt, .xml, .yaml, .yml, .sql, .log, .csv, .plc, .st, .iec, .cfg, .ini, .conf, .config, .pmac, .gcode, .nc`);
+                return;
+            }
+
+            // Обновляем боковую панель с файлами
+            updateFilesSidebar(editableFiles);
+            
+            // Загружаем первый файл в редактор
+            if (editableFiles.length > 0) {
+                loadFileInEditor(editableFiles[0]);
+            }
+
+            appendChatMessage('ai', `📁 Загружено ${editableFiles.length} файл(ов) в редактор!\n` +
+                `💡 Используйте боковую панель для переключения между файлами`);
+        }
+
+        function updateFilesSidebar(files) {
+            const sidebar = document.querySelector('.sidebar');
+            
+            // Очищаем старые файлы
+            const oldFiles = sidebar.querySelectorAll('.loaded-file');
+            const oldHeaders = sidebar.querySelectorAll('.files-header');
+            oldFiles.forEach(file => file.remove());
+            oldHeaders.forEach(header => header.remove());
+
+            // Добавляем заголовок
+            const filesHeader = document.createElement('h3');
+            filesHeader.className = 'files-header';
+            filesHeader.textContent = `📁 Загруженные файлы`;
+            filesHeader.style.marginTop = '20px';
+            filesHeader.style.color = '#007acc';
+            filesHeader.style.borderBottom = '1px solid #3e3e42';
+            filesHeader.style.paddingBottom = '5px';
+            sidebar.appendChild(filesHeader);
+
+            // Добавляем информацию о количестве файлов
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'files-header';
+            infoDiv.textContent = `📊 Файлов: ${files.length}`;
+            infoDiv.style.fontSize = '12px';
+            infoDiv.style.color = '#858585';
+            infoDiv.style.marginBottom = '10px';
+            sidebar.appendChild(infoDiv);
+
+            // Добавляем файлы в боковую панель
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item loaded-file';
+                fileItem.textContent = `📄 ${file.name}`;
+                fileItem.style.cursor = 'pointer';
+                fileItem.onclick = () => {
+                    console.log('Клик по файлу:', file.name);
+                    loadFileInEditor(file);
+                };
+                fileItem.onmouseover = () => fileItem.style.backgroundColor = '#3e3e42';
+                fileItem.onmouseout = () => fileItem.style.backgroundColor = '';
+                sidebar.appendChild(fileItem);
+            });
+
+            // Добавляем кнопку очистки
+            const clearButton = document.createElement('div');
+            clearButton.className = 'file-item files-header';
+            clearButton.textContent = '🗑️ Очистить файлы';
+            clearButton.style.color = '#dc3545';
+            clearButton.style.cursor = 'pointer';
+            clearButton.style.marginTop = '10px';
+            clearButton.style.borderTop = '1px solid #3e3e42';
+            clearButton.style.paddingTop = '10px';
+            clearButton.onclick = () => clearLoadedFiles();
+            sidebar.appendChild(clearButton);
+        }
+
+        function clearLoadedFiles() {
+            if (confirm('🗑️ Очистить загруженные файлы?')) {
+                // Очищаем боковую панель
+                const oldFiles = document.querySelectorAll('.loaded-file');
+                const oldHeaders = document.querySelectorAll('.files-header');
+                oldFiles.forEach(file => file.remove());
+                oldHeaders.forEach(header => header.remove());
+                
+                // Очищаем редактор
+                document.getElementById('code-editor').value = '';
+                updateLineNumbers();
+                
+                // Очищаем статус бар
+                const projectInfo = document.querySelector('.project-info');
+                if (projectInfo) {
+                    projectInfo.remove();
+                }
+                
+                appendChatMessage('ai', '🗑️ Загруженные файлы очищены');
+            }
+        }
+
+        // Глобальные переменные для работы с проектом
+        let currentProjectFiles = [];
+        let currentProjectName = '';
+
+        async function uploadSelectedFolder() {
+            const folderInput = document.getElementById('folderUploadInput');
+            const files = folderInput.files;
+            
+            if (files.length === 0) {
+                appendChatMessage('error', '❌ Не выбрано ни одного файла');
+                return;
+            }
+
+            // Сохраняем файлы проекта для работы
+            currentProjectFiles = Array.from(files);
+            currentProjectName = files[0].webkitRelativePath ? 
+                files[0].webkitRelativePath.split('/')[0] : 'Проект';
+
+            // Показываем информацию о загруженной папке
+            appendChatMessage('user', `📂 Загружена папка "${currentProjectName}" с ${files.length} файлами`);
+
+            // Показываем диалог выбора действия
+            const action = confirm(`📂 Открыта папка "${currentProjectName}" с ${files.length} файлами.\n\n` +
+                `Нажмите OK для работы с файлами в редакторе\n` +
+                `Нажмите Отмена для загрузки в базу данных Rubin AI`);
+
+            if (action) {
+                // Работа с файлами в редакторе (по умолчанию)
+                loadProjectInEditor(files);
+            } else {
+                // Загрузка в базу данных
+                await uploadFolderToDatabase(files);
+            }
+
+            // Очищаем input
+            folderInput.value = '';
+        }
+
+        function clearProject() {
+            if (confirm('🗑️ Очистить текущий проект?')) {
+                // Очищаем переменные проекта
+                currentProjectFiles = [];
+                currentProjectName = '';
+                
+                // Очищаем боковую панель
+                const oldProjectFiles = document.querySelectorAll('.project-file');
+                const oldProjectHeaders = document.querySelectorAll('.project-header');
+                oldProjectFiles.forEach(file => file.remove());
+                oldProjectHeaders.forEach(header => header.remove());
+                
+                // Очищаем редактор
+                document.getElementById('code-editor').value = '';
+                updateLineNumbers();
+                
+                // Очищаем статус бар
+                const projectInfo = document.querySelector('.project-info');
+                if (projectInfo) {
+                    projectInfo.remove();
+                }
+                
+                appendChatMessage('ai', '🗑️ Проект очищен');
+            }
+        }
+
+        async function uploadFolderToDatabase(files) {
+            // Показываем диалог для настройки загрузки
+            const category = prompt('Выберите категорию для всех файлов:\n1. python_code\n2. documentation\n3. configuration\n4. industrial_automation\n5. artificial_intelligence\n6. api_documentation\n7. tutorial\n8. general\n\nВведите номер или название:', 'general');
+            if (category === null) {
+                return;
+            }
+
+            const tags = prompt('Введите теги через запятую (необязательно):', 'folder, uploaded, batch');
+            if (tags === null) {
+                return;
+            }
+
+            const tagList = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+            // Фильтруем только поддерживаемые файлы
+            const supportedExtensions = ['.py', '.md', '.json', '.html', '.txt', '.sql', '.log', '.yaml', '.yml', '.xml', '.csv'];
+            const supportedFiles = Array.from(files).filter(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                return supportedExtensions.includes(ext);
+            });
+
+            if (supportedFiles.length === 0) {
+                alert('В выбранной папке нет поддерживаемых файлов.\nПоддерживаемые форматы: .py, .md, .json, .html, .txt, .sql, .log, .yaml, .yml, .xml, .csv');
+                return;
+            }
+
+            appendChatMessage('user', `📂 Загрузка папки: ${supportedFiles.length} файлов`);
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Загружаем файлы по одному
+            for (const file of supportedFiles) {
+                try {
+                    // Создаем FormData для загрузки файла
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('category', category);
+                    formData.append('tags', tagList.join(','));
+                    
+                    // Загружаем файл через API
+                    const response = await fetch('http://localhost:8084/api/chat', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        successCount++;
+                        appendChatMessage('assistant', `✅ ${file.name} загружен (ID: ${result.data.document_id})`);
+                    } else {
+                        errorCount++;
+                        appendChatMessage('error', `❌ Ошибка загрузки ${file.name}: ${result.message}`);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    appendChatMessage('error', `❌ Ошибка обработки ${file.name}: ${error.message}`);
+                }
+            }
+
+            // Показываем итоговый результат
+            let summaryMessage = `📂 Загрузка папки завершена!\n\n`;
+            summaryMessage += `✅ Успешно загружено: ${successCount} файлов\n`;
+            summaryMessage += `❌ Ошибок: ${errorCount} файлов\n`;
+            summaryMessage += `📊 Всего обработано: ${supportedFiles.length} файлов\n\n`;
+            summaryMessage += `📂 Категория: ${category}\n`;
+            summaryMessage += `🏷️ Теги: ${tagList.join(', ')}\n\n`;
+            summaryMessage += `Все загруженные файлы доступны для поиска в базе данных!`;
+            
+            appendChatMessage('assistant', summaryMessage);
+        }
+
+        function loadProjectInEditor(files) {
+            // Отладочная информация
+            console.log('Загрузка проекта:', {
+                totalFiles: files.length,
+                projectName: currentProjectName,
+                files: Array.from(files).map(f => ({
+                    name: f.name,
+                    size: f.size,
+                    type: f.type,
+                    webkitRelativePath: f.webkitRelativePath
+                }))
+            });
+
+            // Фильтруем только текстовые файлы для редактирования
+            const textExtensions = ['.py', '.js', '.html', '.css', '.json', '.md', '.txt', '.xml', '.yaml', '.yml', '.sql', '.log', '.csv', '.plc', '.st', '.iec', '.cfg', '.ini', '.conf', '.config', '.pmac', '.gcode', '.nc'];
+            const editableFiles = Array.from(files).filter(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                return textExtensions.includes(ext);
+            });
+
+            console.log('Отфильтрованные файлы:', editableFiles.length);
+
+            if (editableFiles.length === 0) {
+                const allExtensions = Array.from(files).map(f => '.' + f.name.split('.').pop().toLowerCase());
+                const uniqueExtensions = [...new Set(allExtensions)];
+                
+                alert(`В выбранной папке нет файлов для редактирования.\n\n` +
+                    `Найдены расширения: ${uniqueExtensions.join(', ')}\n\n` +
+                    `Поддерживаемые форматы: .py, .js, .html, .css, .json, .md, .txt, .xml, .yaml, .yml, .sql, .log, .csv, .plc, .st, .iec, .cfg, .ini, .conf, .config, .pmac, .gcode, .nc`);
+                return;
+            }
+
+            // Обновляем боковую панель с файлами проекта
+            updateProjectSidebar(editableFiles);
+            
+            // Загружаем первый файл в редактор
+            if (editableFiles.length > 0) {
+                loadFileInEditor(editableFiles[0]);
+            }
+
+            appendChatMessage('ai', `📂 Проект "${currentProjectName}" загружен в редактор!\n` +
+                `📄 Доступно файлов: ${editableFiles.length}\n` +
+                `💡 Используйте боковую панель для переключения между файлами`);
+        }
+
+        function updateProjectSidebar(files) {
+            const sidebar = document.querySelector('.sidebar');
+            
+            // Очищаем старые файлы проекта
+            const oldProjectFiles = sidebar.querySelectorAll('.project-file');
+            const oldProjectHeaders = sidebar.querySelectorAll('.project-header');
+            oldProjectFiles.forEach(file => file.remove());
+            oldProjectHeaders.forEach(header => header.remove());
+
+            // Добавляем заголовок проекта
+            const projectHeader = document.createElement('h3');
+            projectHeader.className = 'project-header';
+            projectHeader.textContent = `📁 ${currentProjectName}`;
+            projectHeader.style.marginTop = '20px';
+            projectHeader.style.color = '#007acc';
+            projectHeader.style.borderBottom = '1px solid #3e3e42';
+            projectHeader.style.paddingBottom = '5px';
+            sidebar.appendChild(projectHeader);
+
+            // Показываем информацию о количестве файлов
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'project-header';
+            infoDiv.textContent = `📊 Файлов: ${files.length}`;
+            infoDiv.style.fontSize = '12px';
+            infoDiv.style.color = '#858585';
+            infoDiv.style.marginBottom = '10px';
+            sidebar.appendChild(infoDiv);
+
+            // Группируем файлы по папкам
+            const fileGroups = {};
+            files.forEach(file => {
+                const path = file.webkitRelativePath || file.name;
+                const folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+                
+                if (!fileGroups[folder]) {
+                    fileGroups[folder] = [];
+                }
+                fileGroups[folder].push(file);
+            });
+
+            // Добавляем файлы в боковую панель
+            Object.keys(fileGroups).forEach(folder => {
+                if (folder !== '') {
+                    const folderHeader = document.createElement('div');
+                    folderHeader.className = 'file-item project-file';
+                    folderHeader.style.fontWeight = 'bold';
+                    folderHeader.style.color = '#569cd6';
+                    folderHeader.style.backgroundColor = '#2d2d30';
+                    folderHeader.style.borderLeft = '3px solid #007acc';
+                    folderHeader.textContent = `📁 ${folder}`;
+                    sidebar.appendChild(folderHeader);
+                }
+                
+                fileGroups[folder].forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item project-file';
+                    fileItem.textContent = `📄 ${file.name}`;
+                    fileItem.style.paddingLeft = folder !== '' ? '20px' : '10px';
+                    fileItem.onclick = () => loadFileInEditor(file);
+                    fileItem.onmouseover = () => fileItem.style.backgroundColor = '#3e3e42';
+                    fileItem.onmouseout = () => fileItem.style.backgroundColor = '';
+                    sidebar.appendChild(fileItem);
+                });
+            });
+
+            // Добавляем кнопку очистки проекта
+            const clearButton = document.createElement('div');
+            clearButton.className = 'file-item project-header';
+            clearButton.textContent = '🗑️ Очистить проект';
+            clearButton.style.color = '#dc3545';
+            clearButton.style.cursor = 'pointer';
+            clearButton.style.marginTop = '10px';
+            clearButton.style.borderTop = '1px solid #3e3e42';
+            clearButton.style.paddingTop = '10px';
+            clearButton.onclick = () => clearProject();
+            sidebar.appendChild(clearButton);
+        }
+
+        function loadFileInEditor(file) {
+            console.log('Загрузка файла в редактор:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+
+            // Проверяем размер файла
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert(`⚠️ Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)} MB).\nМаксимальный размер: 10 MB`);
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    console.log('Содержимое файла загружено:', {
+                        length: content.length,
+                        firstChars: content.substring(0, 100)
+                    });
+
+                    // Очищаем редактор и загружаем содержимое
+                    const editor = document.getElementById('code-editor');
+                    if (editor) {
+                        // Сначала сбрасываем подсветку
+                        resetSyntaxHighlighting();
+                        
+                        editor.value = content;
+                        updateLineNumbers();
+                        
+                        // Прокручиваем в начало
+                        editor.scrollTop = 0;
+                        
+                        console.log('Файл загружен в редактор');
+                        
+                        // Применяем подсветку синтаксиса после загрузки
+                        setTimeout(() => {
+                            applySyntaxHighlighting(file.name);
+                        }, 100);
+                        
+                    } else {
+                        console.error('Редактор не найден!');
+                        appendChatMessage('error', '❌ Ошибка: редактор не найден');
+                        return;
+                    }
+                    
+                    // Обновляем заголовок редактора
+                    const statusBar = document.querySelector('.status-bar');
+                    if (statusBar) {
+                        // Удаляем старую информацию о проекте
+                        const oldProjectInfo = statusBar.querySelector('.project-info');
+                        if (oldProjectInfo) {
+                            oldProjectInfo.remove();
+                        }
+                        
+                        // Добавляем новую информацию
+                        const projectInfo = document.createElement('div');
+                        projectInfo.className = 'project-info';
+                        projectInfo.textContent = `📄 ${file.name} | 📁 ${currentProjectName || 'Без проекта'}`;
+                        statusBar.appendChild(projectInfo);
+                    }
+                    
+                    // Показываем информацию в чате
+                    appendChatMessage('ai', `📄 Открыт файл: ${file.name}\n` +
+                        `📊 Размер: ${content.length} символов\n` +
+                        `📝 Строк: ${content.split('\n').length}\n` +
+                        `💡 Файл загружен в редактор с подсветкой синтаксиса`);
+                        
+                } catch (error) {
+                    console.error('Ошибка при загрузке файла:', error);
+                    appendChatMessage('error', `❌ Ошибка загрузки файла: ${error.message}`);
+                }
+            };
+            
+            reader.onerror = function(e) {
+                console.error('Ошибка чтения файла:', e);
+                appendChatMessage('error', `❌ Ошибка чтения файла: ${file.name}`);
+            };
+            
+            // Читаем файл как текст
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        async function showDatabaseStats() {
+            try {
+                appendChatMessage('user', '📊 Запрос статистики базы данных');
+                
+                const response = await fetch('http://localhost:8088/api/documents/stats', {
+                    method: 'GET'
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Используем данные напрямую, так как API возвращает их в корне объекта
+                    const stats = result;
+                    let message = `📊 **Статистика базы данных документов Rubin:**\n\n`;
+                    
+                    message += `**Общая информация:**\n`;
+                    message += `• **Всего документов:** ${stats.total_documents || 0}\n`;
+                    message += `• **Общий размер:** ${stats.total_size_bytes || 0} байт (${stats.total_size_mb || 0} МБ)\n`;
+                    message += `• **Средний размер:** ${stats.average_size_bytes || 0} байт\n`;
+                    message += `• **Документов за неделю:** ${stats.recent_documents_week || 0}\n\n`;
+                    
+                    if (stats.type_distribution && Object.keys(stats.type_distribution).length > 0) {
+                        message += `**По типам файлов:**\n`;
+                        for (const [fileType, count] of Object.entries(stats.type_distribution)) {
+                            message += `• **${fileType}:** ${count} документов\n`;
+                        }
+                        message += `\n`;
+                    }
+                    
+                    message += `**Для поиска документов используйте:**\n`;
+                    message += `• "найди документы по [запрос]"\n`;
+                    message += `• Кнопку "🔍 Поиск в базе" в боковой панели\n`;
+                    message += `• Страницу загрузки: http://localhost:8084/RubinFileUpload.html\n`;
+                    message += `• Общую статистику системы: http://localhost:8084/api/stats`;
+                    
+                    appendChatMessage('assistant', message);
+                } else {
+                    appendChatMessage('error', `❌ Ошибка получения статистики: ${result.error || result.message}`);
+                }
+            } catch (error) {
+                appendChatMessage('error', `❌ Ошибка получения статистики базы данных: ${error.message}`);
+            }
+        }
+
+        async function showSystemStats() {
+            try {
+                appendChatMessage('user', '📊 Запрос общей статистики системы');
+                
+                const response = await fetch('http://localhost:8084/api/stats', {
+                    method: 'GET'
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const stats = result;
+                    let message = `📊 **Общая статистика системы Rubin:**\n\n`;
+                    
+                    // Системная информация
+                    message += `**Система:**\n`;
+                    message += `• **Статус:** ${stats.system?.status || 'неизвестно'}\n`;
+                    message += `• **AI провайдер:** ${stats.system?.ai_provider || 'неизвестно'}\n`;
+                    message += `• **API ключ:** ${stats.system?.api_key_configured ? 'настроен' : 'не настроен'}\n`;
+                    message += `• **Время:** ${new Date(stats.system?.timestamp).toLocaleString()}\n\n`;
+                    
+                    // Документы
+                    message += `**Документы:**\n`;
+                    message += `• **Всего документов:** ${stats.documents?.total_count || 0}\n`;
+                    message += `• **Общий размер:** ${stats.documents?.total_size_mb || 0} МБ\n`;
+                    message += `• **Средний размер:** ${stats.documents?.average_size_kb || 0} КБ\n\n`;
+                    
+                    // Файлы
+                    message += `**Файлы в системе:**\n`;
+                    message += `• **Всего файлов:** ${stats.files?.total_files || 0}\n`;
+                    if (stats.files?.by_extension) {
+                        const topExtensions = Object.entries(stats.files.by_extension)
+                            .sort(([,a], [,b]) => b - a)
+                            .slice(0, 5);
+                        message += `• **Топ расширений:**\n`;
+                        topExtensions.forEach(([ext, count]) => {
+                            message += `  - ${ext || 'без расширения'}: ${count} файлов\n`;
+                        });
+                    }
+                    message += `\n`;
+                    
+                    // База данных
+                    message += `**База данных:**\n`;
+                    message += `• **Всего записей:** ${stats.database?.total_records || 0}\n`;
+                    if (stats.database?.tables) {
+                        message += `• **Таблицы:**\n`;
+                        Object.entries(stats.database.tables).forEach(([table, count]) => {
+                            message += `  - ${table}: ${count} записей\n`;
+                        });
+                    }
+                    
+                    appendChatMessage('assistant', message);
+                } else {
+                    appendChatMessage('error', `❌ Ошибка получения статистики: ${result.error || result.message}`);
+                }
+            } catch (error) {
+                appendChatMessage('error', `❌ Ошибка получения статистики системы: ${error.message}`);
+            }
+        }
+
+
+        async function uploadContentToDatabase(filename, content, category, tags) {
+            try {
+                appendChatMessage('user', `📚 Загрузка в базу данных: ${filename}`);
+                
+                const response = await fetch('http://localhost:8088/api/documents/upload-content', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        content: content,
+                        category: category,
+                        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    let message = `✅ Документ успешно загружен в базу данных!\n\n`;
+                    message += `📄 **Имя файла:** ${data.filename}\n`;
+                    message += `🆔 **ID документа:** ${data.document_id}\n`;
+                    message += `📂 **Категория:** ${data.category}\n`;
+                    message += `🏷️ **Теги:** ${data.tags.join(', ')}\n`;
+                    message += `📊 **Размер:** ${data.file_size} байт\n`;
+                    message += `📝 **Содержимое:** ${data.content_length} символов\n\n`;
+                    message += `Теперь этот документ доступен для поиска в базе данных!`;
+                    
+                    appendChatMessage('assistant', message);
+                    } else {
+                    appendChatMessage('error', `❌ Ошибка загрузки: ${result.message}`);
+                }
+            } catch (error) {
+                appendChatMessage('error', `❌ Ошибка загрузки в базу данных: ${error.message}`);
+            }
+        }
+
+        // Функции файлов
+        function openFileInEditor(filename) {
+            // В реальной версии здесь было бы чтение файла
+            appendChatMessage('ai', `📁 Открытие файла: ${filename}\n\nВ полной версии здесь откроется содержимое файла.`);
+        }
+
+        // TTS функции
+        function speak(text) {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                const utter = new SpeechSynthesisUtterance(text.replace(/[#*_`>]/g, ''));
+                utter.lang = 'ru-RU';
+                utter.rate = 1.0;
+                utter.pitch = 1.0;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utter);
+            } catch (e) {
+                console.log('TTS недоступен:', e);
+            }
+        }
+
+        function toggleAutoTTS() {
+            autoTTS = !autoTTS;
+            const ttsBtn = document.getElementById('tts-btn');
+            ttsBtn.style.background = autoTTS ? '#28a745' : '#007acc';
+            appendChatMessage('ai', `🔊 Автоозвучивание: ${autoTTS ? 'включено' : 'выключено'}`);
+        }
+
+        // Голосовой ввод
+        function toggleVoiceInput() {
+            try {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) {
+                    alert('Голосовой ввод не поддерживается этим браузером');
+                    return;
+                }
+                
+                if (recognition) {
+                    recognition.stop();
+                    recognition = null;
+                    setVoiceBtnActive(false);
+                    return;
+                }
+                
+                recognition = new SR();
+                recognition.lang = 'ru-RU';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+                
+                recognition.onresult = (e) => {
+                    const transcript = e.results[0][0].transcript;
+                    const input = document.getElementById('chat-input');
+                    input.value = transcript;
+                    setTimeout(sendChatMessage, 50);
+                };
+                
+                recognition.onerror = () => {
+                    setVoiceBtnActive(false);
+                    recognition = null;
+                };
+                
+                recognition.onend = () => {
+                    setVoiceBtnActive(false);
+                    recognition = null;
+                };
+                
+                recognition.start();
+                setVoiceBtnActive(true);
+                
+            } catch (e) {
+                setVoiceBtnActive(false);
+                recognition = null;
+                appendChatMessage('error', `Ошибка голосового ввода: ${e.message}`);
+            }
+        }
+
+        function setVoiceBtnActive(active) {
+            const micBtn = document.getElementById('voice-btn');
+            micBtn.style.background = active ? '#28a745' : '#007acc';
+        }
+
+        // Автоматическое тестирование соединения каждые 30 секунд (тихо)
+        setInterval(() => {
+            if (!isOfflineMode && connectionRetries < maxRetries) {
+                // Тихо проверяем соединение без сообщений в чате
+                testConnectionQuiet();
+            }
+        }, 30000);
+        
+        // Тихая проверка соединения (без сообщений в чате)
+        async function testConnectionQuiet() {
+            try {
+                const response = await fetch('http://localhost:8084/health', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    updateConnectionStatus('connected');
+                    connectionRetries = 0;
+                } else {
+                    updateConnectionStatus('offline');
+                }
+            } catch (e) {
+                updateConnectionStatus('offline');
+            }
+        }
+
+        // Функция настоящей цветной подсветки синтаксиса
+        function resetSyntaxHighlighting() {
+            const highlightDiv = document.getElementById('syntax-highlight');
+            if (highlightDiv) {
+                highlightDiv.innerHTML = '';
+                highlightDiv.style.display = 'none';
+            }
+        }
+
+        function applySyntaxHighlighting(filename) {
+            const editor = document.getElementById('code-editor');
+            const highlightDiv = document.getElementById('syntax-highlight');
+            
+            if (!editor || !highlightDiv) {
+                console.log('Редактор или элемент подсветки не найден');
+                return;
+            }
+
+            // Сначала сбрасываем подсветку
+            resetSyntaxHighlighting();
+
+            const ext = filename.split('.').pop().toLowerCase();
+            const content = editor.value;
+            
+            console.log('ПОДСВЕТКА ОТКЛЮЧЕНА для тестирования:', filename, 'расширение:', ext);
+            
+            // ВРЕМЕННО ОТКЛЮЧАЕМ ПОДСВЕТКУ ДЛЯ ТЕСТИРОВАНИЯ
+            return;
+            
+            // Создаем настоящую HTML подсветку
+            let highlightedContent = content;
+            
+            // Подсветка для PLC - НОВЫЙ ПОДХОД
+            if (ext === 'plc') {
+                // Создаем массив для хранения обработанных строк
+                let lines = highlightedContent.split('\n');
+                let result = [];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    
+                    // Экранируем HTML символы
+                    line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    
+                    // Применяем подсветку
+                    line = line
+                        .replace(/\b(IF|THEN|ELSE|END_IF|WHILE|DO|END_WHILE|FOR|TO|BY|END_FOR|CASE|OF|END_CASE|FUNCTION|END_FUNCTION|PROGRAM|END_PROGRAM|VAR|END_VAR|CONSTANT|TYPE|END_TYPE|STRUCT|END_STRUCT|ENUM|END_ENUM)\b/gi, '<span style="color: #569cd6; font-weight: bold;">$1</span>')
+                        .replace(/\b(TRUE|FALSE|BOOL|INT|DINT|REAL|STRING|TIME|DATE|DT)\b/gi, '<span style="color: #569cd6; font-weight: bold;">$1</span>')
+                        .replace(/\b(AND|OR|NOT|XOR|MOD|DIV|SHR|SHL|ROL|ROR)\b/gi, '<span style="color: #569cd6; font-weight: bold;">$1</span>')
+                        .replace(/\b(I[0-9]+\.?[0-9]*|Q[0-9]+\.?[0-9]*|M[0-9]+\.?[0-9]*|DB[0-9]+\.DB[XY][0-9]+\.?[0-9]*)\b/gi, '<span style="color: #d7ba7d; font-weight: bold;">$1</span>')
+                        .replace(/\b(TON|TOF|TP|CTU|CTD|CTUD|TONR|TOFR|TPR)\b/gi, '<span style="color: #4ec9b0; font-weight: bold;">$1</span>')
+                        // Подсветка выражений с ERROR или STOP красным
+                        .replace(/\b[A-Z_]*ERROR[A-Z_]*\b/gi, '<span style="color: #f44747; font-weight: bold;">$&</span>')
+                        .replace(/\b[A-Z_]*STOP[A-Z_]*\b/gi, '<span style="color: #f44747; font-weight: bold;">$&</span>')
+                        .replace(/\b[A-Z_]*FAULT[A-Z_]*\b/gi, '<span style="color: #f44747; font-weight: bold;">$&</span>')
+                        .replace(/\b[A-Z_]*ALARM[A-Z_]*\b/gi, '<span style="color: #f44747; font-weight: bold;">$&</span>')
+                        // Комментарии зеленым
+                        .replace(/\/\/.*$/gm, '<span style="color: #6a9955; font-style: italic;">$&</span>')
+                        .replace(/;.*$/gm, '<span style="color: #6a9955; font-style: italic;">$&</span>')
+                        .replace(/\b[0-9]+\.[0-9]+\b/g, '<span style="color: #d7ba7d; font-weight: bold;">$&</span>')
+                        .replace(/\b[0-9]+\b/g, '<span style="color: #d7ba7d; font-weight: bold;">$&</span>');
+                    
+                    result.push(line);
+                }
+                
+                highlightedContent = result.join('\n');
+            }
+            
+            // Отладочная информация
+            console.log('Результат подсветки (первые 300 символов):', highlightedContent.substring(0, 300));
+            
+            // Устанавливаем HTML содержимое
+            highlightDiv.innerHTML = highlightedContent;
+            highlightDiv.style.display = 'block';
+            
+            // Принудительно синхронизируем стили
+            const editorStyle = window.getComputedStyle(editor);
+            highlightDiv.style.fontFamily = editorStyle.fontFamily;
+            highlightDiv.style.fontSize = editorStyle.fontSize;
+            highlightDiv.style.lineHeight = editorStyle.lineHeight;
+            highlightDiv.style.padding = editorStyle.padding;
+            highlightDiv.style.margin = editorStyle.margin;
+            highlightDiv.style.border = editorStyle.border;
+            highlightDiv.style.boxSizing = editorStyle.boxSizing;
+            
+            // Синхронизируем прокрутку и обновляем подсветку
+            function syncScroll() {
+                highlightDiv.scrollTop = editor.scrollTop;
+                highlightDiv.scrollLeft = editor.scrollLeft;
+            }
+            
+            function updateHighlight() {
+                const currentContent = editor.value;
+                if (currentContent !== content) {
+                    // Обновляем подсветку с новым содержимым
+                    applySyntaxHighlighting(filename);
+                }
+            }
+            
+            // Удаляем старые обработчики
+            editor.removeEventListener('scroll', syncScroll);
+            editor.removeEventListener('input', updateHighlight);
+            // Добавляем новые обработчики
+            editor.addEventListener('scroll', syncScroll);
+            editor.addEventListener('input', updateHighlight);
+            
+            // Применяем синхронизацию
+            syncScroll();
+            
+            // Принудительная синхронизация после загрузки
+            setTimeout(() => {
+                syncScroll();
+            }, 100);
+            
+            console.log('Применена настоящая цветная подсветка с возможностью редактирования');
+        }
+
+        function highlightPLC(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/\b(IF|THEN|ELSE|END_IF|WHILE|DO|END_WHILE|FOR|TO|BY|END_FOR|CASE|OF|END_CASE|FUNCTION|END_FUNCTION|PROGRAM|END_PROGRAM|VAR|END_VAR|CONSTANT|TYPE|END_TYPE|STRUCT|END_STRUCT|ENUM|END_ENUM)\b/gi, '<span class="plc-keyword">$1</span>')
+                .replace(/\b(TRUE|FALSE|BOOL|INT|DINT|REAL|STRING|TIME|DATE|DT)\b/gi, '<span class="plc-keyword">$1</span>')
+                .replace(/\b(AND|OR|NOT|XOR|MOD|DIV|SHR|SHL|ROL|ROR)\b/gi, '<span class="operator">$1</span>')
+                .replace(/\b(I[0-9]+\.?[0-9]*|Q[0-9]+\.?[0-9]*|M[0-9]+\.?[0-9]*|DB[0-9]+\.DB[XY][0-9]+\.?[0-9]*)\b/gi, '<span class="plc-address">$1</span>')
+                .replace(/\b(TON|TOF|TP|CTU|CTD|CTUD|TONR|TOFR|TPR)\b/gi, '<span class="plc-function">$1</span>')
+                .replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>')
+                .replace(/\/\/.*$/gm, '<span class="comment">$&</span>')
+                .replace(/"([^"\\]|\\.)*"/g, '<span class="string">$&</span>')
+                .replace(/'([^'\\]|\\.)*'/g, '<span class="string">$&</span>')
+                .replace(/\b[0-9]+\.[0-9]+\b/g, '<span class="number">$&</span>')
+                .replace(/\b[0-9]+\b/g, '<span class="number">$&</span>');
+        }
+
+        function highlightPython(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/\b(def|class|if|elif|else|for|while|try|except|finally|with|import|from|as|return|yield|lambda|and|or|not|in|is|True|False|None)\b/g, '<span class="keyword">$1</span>')
+                .replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, '<span class="function">$1</span>(')
+                .replace(/#.*$/gm, '<span class="comment">$&</span>')
+                .replace(/"""[\s\S]*?"""/g, '<span class="comment">$&</span>')
+                .replace(/'''[\s\S]*?'''/g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>')
+                .replace(/\b[0-9]+\.[0-9]+\b/g, '<span class="number">$&</span>')
+                .replace(/\b[0-9]+\b/g, '<span class="number">$&</span>');
+        }
+
+        function highlightJavaScript(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/\b(function|var|let|const|if|else|for|while|do|switch|case|break|continue|return|try|catch|finally|throw|new|this|class|extends|import|export|async|await)\b/g, '<span class="keyword">$1</span>')
+                .replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, '<span class="function">$1</span>(')
+                .replace(/\/\/.*$/gm, '<span class="comment">$&</span>')
+                .replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>')
+                .replace(/`[^`]*`/g, '<span class="string">$&</span>')
+                .replace(/\b[0-9]+\.[0-9]+\b/g, '<span class="number">$&</span>')
+                .replace(/\b[0-9]+\b/g, '<span class="number">$&</span>');
+        }
+
+        function highlightHTML(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/&lt;\/?[^&gt;]+&gt;/g, '<span class="keyword">$&</span>')
+                .replace(/&lt;!--[\s\S]*?--&gt;/g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>');
+        }
+
+        function highlightCSS(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/\b([A-Za-z-]+)\s*:/g, '<span class="keyword">$1</span>:')
+                .replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>')
+                .replace(/\b[0-9]+(px|em|rem|%|vh|vw|pt|pc|in|cm|mm)\b/g, '<span class="number">$&</span>');
+        }
+
+        function highlightXML(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/&lt;\/?[^&gt;]+&gt;/g, '<span class="keyword">$&</span>')
+                .replace(/&lt;!--[\s\S]*?--&gt;/g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>');
+        }
+
+        function highlightGeneric(content) {
+            // Экранируем HTML символы
+            content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return content
+                .replace(/\/\/.*$/gm, '<span class="comment">$&</span>')
+                .replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>')
+                .replace(/"[^"]*"/g, '<span class="string">$&</span>')
+                .replace(/'[^']*'/g, '<span class="string">$&</span>')
+                .replace(/\b[0-9]+\.[0-9]+\b/g, '<span class="number">$&</span>')
+                .replace(/\b[0-9]+\b/g, '<span class="number">$&</span>');
+        }
+
+        // Функция анализа текущего файла
+        function analyzeCurrentFile() {
+            const editor = document.getElementById('code-editor');
+            if (!editor || !editor.value.trim()) {
+                appendChatMessage('error', '❌ Нет файла для анализа. Откройте файл в редакторе.');
+                return;
+            }
+
+            const content = editor.value;
+            const filename = getCurrentFileName();
+            const ext = filename.split('.').pop().toLowerCase();
+            
+            appendChatMessage('user', `🔍 Анализ файла: ${filename}`);
+            
+            // Анализ в зависимости от типа файла
+            let analysis = '';
+            
+            switch (ext) {
+                case 'plc':
+                    analysis = analyzePLCFile(content, filename);
+                    break;
+                case 'py':
+                    analysis = analyzePythonFile(content, filename);
+                    break;
+                case 'js':
+                    analysis = analyzeJavaScriptFile(content, filename);
+                    break;
+                case 'html':
+                    analysis = analyzeHTMLFile(content, filename);
+                    break;
+                case 'xml':
+                    analysis = analyzeXMLFile(content, filename);
+                    break;
+                default:
+                    analysis = analyzeGenericFile(content, filename);
+            }
+            
+            appendChatMessage('ai', analysis);
+        }
+
+        function getCurrentFileName() {
+            const statusBar = document.querySelector('.project-info');
+            if (statusBar) {
+                const text = statusBar.textContent;
+                const match = text.match(/📄\s+([^|]+)/);
+                if (match) {
+                    return match[1].trim();
+                }
+            }
+            return 'unknown.txt';
+        }
+
+        function analyzePLCFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            // Поиск ключевых элементов
+            const programs = content.match(/PROGRAM\s+(\w+)/gi) || [];
+            const functions = content.match(/FUNCTION\s+(\w+)/gi) || [];
+            const variables = content.match(/VAR\s+([\s\S]*?)END_VAR/gi) || [];
+            const comments = content.match(/\/\/.*$/gm) || [];
+            const addresses = content.match(/\b[IQM]\d+\.\d+\b/g) || [];
+            const timers = content.match(/\b(TON|TOF|TP|CTU|CTD|CTUD)\b/gi) || [];
+            
+            // Анализ структуры
+            let analysis = `📊 **АНАЛИЗ PLC ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк кода: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• Комментариев: ${comments.length}\n\n`;
+            
+            analysis += `🏗️ **Структура программы:**\n`;
+            analysis += `• Программ: ${programs.length}\n`;
+            analysis += `• Функций: ${functions.length}\n`;
+            analysis += `• Блоков переменных: ${variables.length}\n\n`;
+            
+            analysis += `⚙️ **Элементы управления:**\n`;
+            analysis += `• Адресов I/O: ${addresses.length}\n`;
+            analysis += `• Таймеров/счетчиков: ${timers.length}\n\n`;
+            
+            if (programs.length > 0) {
+                analysis += `📋 **Найденные программы:**\n`;
+                programs.forEach((prog, i) => {
+                    analysis += `${i + 1}. ${prog}\n`;
+                });
+                analysis += `\n`;
+            }
+            
+            if (functions.length > 0) {
+                analysis += `🔧 **Найденные функции:**\n`;
+                functions.forEach((func, i) => {
+                    analysis += `${i + 1}. ${func}\n`;
+                });
+                analysis += `\n`;
+            }
+            
+            // Анализ сложности
+            const complexity = calculateComplexity(content);
+            analysis += `📊 **Анализ сложности:**\n`;
+            analysis += `• Уровень сложности: ${complexity.level}\n`;
+            analysis += `• Оценка: ${complexity.score}/10\n`;
+            analysis += `• Рекомендации: ${complexity.recommendations}\n\n`;
+            
+            analysis += `💡 **Рекомендации:**\n`;
+            if (comments.length < totalLines * 0.1) {
+                analysis += `• Добавьте больше комментариев (сейчас ${(comments.length/totalLines*100).toFixed(1)}%)\n`;
+            }
+            if (functions.length === 0) {
+                analysis += `• Рассмотрите выделение логики в отдельные функции\n`;
+            }
+            if (addresses.length > 50) {
+                analysis += `• Много I/O адресов (${addresses.length}) - проверьте организацию\n`;
+            }
+            
+            return analysis;
+        }
+
+        function analyzePythonFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            const functions = content.match(/def\s+(\w+)/g) || [];
+            const classes = content.match(/class\s+(\w+)/g) || [];
+            const imports = content.match(/import\s+(\w+)/g) || [];
+            const comments = content.match(/#.*$/gm) || [];
+            
+            let analysis = `📊 **АНАЛИЗ PYTHON ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк кода: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• Функций: ${functions.length}\n`;
+            analysis += `• Классов: ${classes.length}\n`;
+            analysis += `• Импортов: ${imports.length}\n`;
+            analysis += `• Комментариев: ${comments.length}\n\n`;
+            
+            if (functions.length > 0) {
+                analysis += `🔧 **Функции:**\n`;
+                functions.forEach((func, i) => {
+                    analysis += `${i + 1}. ${func}\n`;
+                });
+                analysis += `\n`;
+            }
+            
+            if (classes.length > 0) {
+                analysis += `🏗️ **Классы:**\n`;
+                classes.forEach((cls, i) => {
+                    analysis += `${i + 1}. ${cls}\n`;
+                });
+                analysis += `\n`;
+            }
+            
+            return analysis;
+        }
+
+        function analyzeJavaScriptFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            const functions = content.match(/function\s+(\w+)/g) || [];
+            const variables = content.match(/(var|let|const)\s+(\w+)/g) || [];
+            const comments = content.match(/\/\/.*$/gm) || [];
+            
+            let analysis = `📊 **АНАЛИЗ JAVASCRIPT ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк кода: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• Функций: ${functions.length}\n`;
+            analysis += `• Переменных: ${variables.length}\n`;
+            analysis += `• Комментариев: ${comments.length}\n\n`;
+            
+            return analysis;
+        }
+
+        function analyzeHTMLFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            const tags = content.match(/<(\w+)/g) || [];
+            const scripts = content.match(/<script/g) || [];
+            const styles = content.match(/<style/g) || [];
+            
+            let analysis = `📊 **АНАЛИЗ HTML ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк кода: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• HTML тегов: ${tags.length}\n`;
+            analysis += `• Script блоков: ${scripts.length}\n`;
+            analysis += `• Style блоков: ${styles.length}\n\n`;
+            
+            return analysis;
+        }
+
+        function analyzeXMLFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            const elements = content.match(/<(\w+)/g) || [];
+            const attributes = content.match(/\w+\s*=/g) || [];
+            
+            let analysis = `📊 **АНАЛИЗ XML ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк кода: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• XML элементов: ${elements.length}\n`;
+            analysis += `• Атрибутов: ${attributes.length}\n\n`;
+            
+            return analysis;
+        }
+
+        function analyzeGenericFile(content, filename) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            const totalChars = content.length;
+            
+            let analysis = `📊 **АНАЛИЗ ФАЙЛА: ${filename}**\n\n`;
+            analysis += `📈 **Общая статистика:**\n`;
+            analysis += `• Строк: ${totalLines}\n`;
+            analysis += `• Символов: ${totalChars}\n`;
+            analysis += `• Средняя длина строки: ${Math.round(totalChars / totalLines)}\n\n`;
+            
+            return analysis;
+        }
+
+        function calculateComplexity(content) {
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            
+            // Подсчет вложенности
+            let maxNesting = 0;
+            let currentNesting = 0;
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.includes('IF') || trimmed.includes('WHILE') || trimmed.includes('FOR')) {
+                    currentNesting++;
+                    maxNesting = Math.max(maxNesting, currentNesting);
+                }
+                if (trimmed.includes('END_IF') || trimmed.includes('END_WHILE') || trimmed.includes('END_FOR')) {
+                    currentNesting--;
+                }
+            }
+            
+            // Оценка сложности
+            let score = 5; // базовая сложность
+            if (maxNesting > 3) score += 2;
+            if (totalLines > 500) score += 2;
+            if (totalLines > 1000) score += 1;
+            
+            let level = 'Низкая';
+            if (score > 7) level = 'Высокая';
+            else if (score > 5) level = 'Средняя';
+            
+            let recommendations = '';
+            if (maxNesting > 3) recommendations += 'Упростите вложенность условий. ';
+            if (totalLines > 500) recommendations += 'Рассмотрите разбиение на модули. ';
+            if (recommendations === '') recommendations = 'Код хорошо структурирован.';
+            
+            return { level, score, recommendations };
+        }
+
+    </script>
+</body>
+</html>

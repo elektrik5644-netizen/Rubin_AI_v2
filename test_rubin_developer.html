@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Тест RubinDeveloper</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #1e1e1e; color: #d4d4d4; }
+        .container { max-width: 800px; margin: auto; background: #2d2d30; padding: 20px; border-radius: 8px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #45a049; }
+        .log { background-color: #3e3e42; color: #d4d4d4; padding: 10px; border-radius: 4px; margin: 10px 0; white-space: pre-wrap; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест RubinDeveloper</h1>
+        <p>Эта страница тестирует подключение к Smart Dispatcher</p>
+        
+        <button onclick="testConnection()">Проверить подключение</button>
+        <button onclick="testChat()">Тест чата "привет"</button>
+        <button onclick="clearLog()">Очистить лог</button>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function testConnection() {
+            log('🔍 Проверяем подключение к Smart Dispatcher...');
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Подключение успешно!', 'success');
+                    log(`📊 Статус: ${data.status || 'unknown'}`);
+                } else {
+                    log(`❌ Ошибка HTTP: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                log(`🔧 Тип ошибки: ${error.name}`, 'error');
+            }
+        }
+
+        async function testChat() {
+            log('💬 Тестируем чат с сообщением "привет"...');
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ message: 'привет' })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Чат работает!', 'success');
+                    log(`📝 Ответ: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Ошибка HTTP: ${response.status} ${response.statusText}`, 'error');
+                    const errorText = await response.text();
+                    log(`📄 Текст ошибки: ${errorText}`);
+                }
+            } catch (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                log(`🔧 Тип ошибки: ${error.name}`, 'error');
+                log(`🔧 Стек ошибки: ${error.stack}`, 'error');
+            }
+        }
+
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', function() {
+            log('🚀 Страница загружена, запускаем автотест...');
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+{
+  "enabled": true,
+  "max_restart_attempts": 3,
+  "restart_delay": 5,
+  "health_check_interval": 30,
+  "auto_config_update": true,
+  "backup_before_changes": true,
+  "modules": {
+    "ai_chat": {
+      "port": 8084,
+      "critical": true
+    },
+    "electrical": {
+      "port": 8087,
+      "critical": false
+    },
+    "radiomechanics": {
+      "port": 8089,
+      "critical": false
+    },
+    "controllers": {
+      "port": 8090,
+      "critical": true
+    },
+    "documents": {
+      "port": 8088,
+      "critical": false
+    }
+  },
+  "healing_strategies": {
+    "port_conflict": "restart_service",
+    "memory_leak": "restart_service",
+    "connection_timeout": "restart_service",
+    "config_error": "update_config",
+    "dependency_missing": "install_dependency"
+  }
+}

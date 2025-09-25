@@ -1,0 +1,35 @@
+{
+  "enabled": true,
+  "optimization_interval": 300,
+  "memory_threshold": 80,
+  "cpu_threshold": 70,
+  "response_time_threshold": 2.0,
+  "modules": {
+    "ai_chat": {
+      "cache_size": 1000,
+      "vector_cache_size": 500,
+      "model_optimization": true,
+      "batch_processing": true
+    },
+    "electrical": {
+      "response_cache": true,
+      "connection_pooling": true,
+      "timeout_optimization": true
+    },
+    "radiomechanics": {
+      "response_cache": true,
+      "connection_pooling": true,
+      "timeout_optimization": true
+    },
+    "controllers": {
+      "response_cache": true,
+      "connection_pooling": true,
+      "timeout_optimization": true
+    },
+    "documents": {
+      "response_cache": true,
+      "connection_pooling": true,
+      "timeout_optimization": true
+    }
+  }
+}

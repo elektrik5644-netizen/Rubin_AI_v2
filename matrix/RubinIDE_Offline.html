@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubin AI Matrix - Офлайн режим</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status.offline {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .chat-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.ai {
+            background: #e9ecef;
+            color: #333;
+            margin-right: auto;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-container input:focus {
+            border-color: #007bff;
+        }
+
+        .input-container button {
+            padding: 12px 25px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .input-container button:hover {
+            background: #0056b3;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.3s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            border-color: #007bff;
+        }
+
+        .feature h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .code-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .code-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .analyze-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .analyze-btn:hover {
+            background: #218838;
+        }
+
+        .analysis-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Rubin AI Matrix</h1>
+            <p>Система искусственного интеллекта для промышленной автоматизации</p>
+        </div>
+
+        <div class="status offline">
+            <strong>🌐 Офлайн режим</strong><br>
+            API недоступен, используем локальные функции
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                <strong>Rubin AI:</strong> Привет! Я Rubin AI. Готов помочь с программированием и промышленной автоматизацией. Работаю в офлайн режиме.
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Введите ваше сообщение..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h3>💬 AI Чат</h3>
+                <p>Общение с Rubin AI по любым вопросам программирования</p>
+            </div>
+            <div class="feature">
+                <h3>🔍 Анализ кода</h3>
+                <p>Анализ качества, безопасности и производительности кода</p>
+            </div>
+            <div class="feature">
+                <h3>⚙️ PLC Программирование</h3>
+                <p>Помощь с Ladder Logic, Structured Text, PMAC</p>
+            </div>
+            <div class="feature">
+                <h3>🏭 Промышленная автоматизация</h3>
+                <p>Диагностика оборудования и систем управления</p>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h3>🔍 Анализ кода</h3>
+            <textarea class="code-input" id="codeInput" placeholder="Вставьте ваш код здесь...">print("Hello, World!")
+# Пример Python кода
+def calculate_sum(a, b):
+    return a + b
+
+result = calculate_sum(5, 3)
+print(f"Результат: {result}")</textarea>
+            <button class="analyze-btn" onclick="analyzeCode()">Анализировать код</button>
+            <div id="analysisResult" class="analysis-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let messageCount = 0;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message === '') return;
+
+            // Добавляем сообщение пользователя
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Генерируем ответ
+            setTimeout(() => {
+                const response = generateResponse(message);
+                addMessage(response, 'ai');
+            }, 500);
+        }
+
+        function addMessage(text, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            if (sender === 'ai') {
+                messageDiv.innerHTML = `<strong>Rubin AI:</strong> ${text}`;
+            } else {
+                messageDiv.innerHTML = `<strong>Вы:</strong> ${text}`;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function generateResponse(message) {
+            const messageLower = message.toLowerCase();
+            
+            if (messageLower.includes('привет') || messageLower.includes('hello')) {
+                return "Привет! Я Rubin AI. Готов помочь с программированием и промышленной автоматизацией!";
+            } else if (messageLower.includes('как дела')) {
+                return "Отлично! Система работает стабильно в офлайн режиме. Чем могу помочь?";
+            } else if (messageLower.includes('python')) {
+                return "Python - отличный язык программирования! Могу помочь с анализом кода, созданием скриптов или решением задач. Попробуйте функцию анализа кода ниже!";
+            } else if (messageLower.includes('plc') || messageLower.includes('плц')) {
+                return "PLC программирование - моя специализация! Помогу с Ladder Logic, Structured Text, диагностикой PMAC. Какие у вас вопросы по PLC?";
+            } else if (messageLower.includes('pmac')) {
+                return "PMAC контроллеры - это моя область! Могу помочь с настройкой, программированием и диагностикой. Что именно вас интересует?";
+            } else if (messageLower.includes('привод') || messageLower.includes('двигатель') || messageLower.includes('мотор')) {
+                return `**Привод** - это устройство для преобразования электрической энергии в механическое движение.
+
+**Типы приводов:**
+• **Сервоприводы** - точное позиционирование, обратная связь
+• **Шаговые приводы** - дискретное движение по шагам
+• **Асинхронные двигатели** - простота, надежность
+• **Синхронные двигатели** - высокая точность
+
+**Основные параметры:**
+• Мощность (Вт, кВт)
+• Скорость вращения (об/мин)
+• Момент (Н⋅м)
+• Точность позиционирования
+
+**Управление:**
+• Через PLC (Ladder Logic, ST)
+• PMAC контроллеры
+• Частотные преобразователи
+• Шаговые драйверы
+
+Что именно вас интересует в приводах?`;
+            } else if (messageLower.includes('датчик') || messageLower.includes('сенсор')) {
+                return `**Датчики** - устройства для измерения физических величин.
+
+**Типы датчиков:**
+• **Позиционные** - энкодеры, резольверы, линейные датчики
+• **Силовые** - тензодатчики, датчики момента
+• **Температурные** - термопары, RTD, терморезисторы
+• **Давления** - пьезоэлектрические, емкостные
+• **Близости** - индуктивные, емкостные, оптические
+
+**Интерфейсы:**
+• **Аналоговые** - 4-20мА, 0-10В
+• **Цифровые** - RS485, Ethernet, CAN
+• **Специальные** - EnDat, SSI, BiSS
+
+**Применение в ЧПУ:**
+• Обратная связь по положению
+• Контроль усилия резания
+• Мониторинг состояния
+
+Какие датчики вас интересуют?`;
+            } else if (messageLower.includes('чпу') || messageLower.includes('cnc')) {
+                return `**ЧПУ (Числовое Программное Управление)** - система автоматического управления станками.
+
+**Основные компоненты:**
+• **Контроллер** - PLC, PMAC, специализированные
+• **Приводы** - сервоприводы, шаговые двигатели
+• **Датчики** - энкодеры, датчики положения
+• **Интерфейс** - пульт управления, HMI
+
+**Программирование:**
+• **G-коды** - управляющие команды
+• **M-коды** - вспомогательные функции
+• **PLC логика** - безопасность, последовательности
+• **PMAC** - высокоскоростное управление
+
+**Типы станков:**
+• Фрезерные, токарные, сверлильные
+• Лазерные, плазменные
+• 3D принтеры, роботы
+
+Что именно по ЧПУ вас интересует?`;
+            } else if (messageLower.includes('анализ') || messageLower.includes('анализ кода')) {
+                return "Анализ кода - одна из моих основных функций! Используйте поле анализа кода ниже для детального анализа вашего кода.";
+            } else if (messageLower.includes('помощь') || messageLower.includes('help')) {
+                return `**Доступные функции:**
+• Анализ кода (Python, PLC, PMAC)
+• Генерация кода
+• Диагностика промышленного оборудования
+• Программирование PLC
+• Работа с PMAC контроллерами
+• Математические вычисления
+
+**Специализации:**
+• Приводы и двигатели
+• Датчики и измерения
+• ЧПУ системы
+• Промышленная автоматизация
+
+Попробуйте проанализировать код в поле ниже!`;
+            } else {
+                return `Понял ваш запрос: "${message}". Я специализируюсь на промышленной автоматизации, программировании PLC, PMAC и анализе кода. 
+
+**Попробуйте спросить о:**
+• Приводах и двигателях
+• Датчиках и измерениях
+• ЧПУ системах
+• PLC программировании
+• PMAC контроллерах
+• Анализе кода
+
+Чем конкретно могу помочь?`;
+            }
+        }
+
+        function analyzeCode() {
+            const codeInput = document.getElementById('codeInput');
+            const analysisResult = document.getElementById('analysisResult');
+            const code = codeInput.value.trim();
+            
+            if (code === '') {
+                alert('Пожалуйста, введите код для анализа');
+                return;
+            }
+
+            // Простой анализ кода
+            const analysis = performCodeAnalysis(code);
+            
+            analysisResult.innerHTML = `
+                <h4>📊 Результаты анализа кода</h4>
+                <p><strong>Качество кода:</strong> ${analysis.quality_score}/100</p>
+                <p><strong>Найдено проблем:</strong> ${analysis.issues.length}</p>
+                <p><strong>Рекомендации:</strong> ${analysis.recommendations.length}</p>
+                
+                ${analysis.issues.length > 0 ? `
+                    <h5>⚠️ Найденные проблемы:</h5>
+                    <ul>
+                        ${analysis.issues.map(issue => `<li><strong>${issue.type}:</strong> ${issue.message}</li>`).join('')}
+                    </ul>
+                ` : ''}
+                
+                ${analysis.recommendations.length > 0 ? `
+                    <h5>💡 Рекомендации:</h5>
+                    <ul>
+                        ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                ` : ''}
+                
+                <p><strong>Общая оценка:</strong> ${analysis.summary}</p>
+            `;
+            
+            analysisResult.style.display = 'block';
+        }
+
+        function performCodeAnalysis(code) {
+            const issues = [];
+            const recommendations = [];
+            let quality_score = 85;
+            
+            // Анализ Python кода
+            if (code.includes('import *')) {
+                issues.push({
+                    type: 'Предупреждение',
+                    message: 'Использование "import *" не рекомендуется'
+                });
+                recommendations.push('Используйте конкретные импорты вместо "import *"');
+                quality_score -= 10;
+            }
+            
+            if (code.includes('eval(')) {
+                issues.push({
+                    type: 'Безопасность',
+                    message: 'Использование eval() может быть небезопасно'
+                });
+                recommendations.push('Избегайте использования eval() для безопасности');
+                quality_score -= 15;
+            }
+            
+            if (code.split('\n').length > 50) {
+                issues.push({
+                    type: 'Качество',
+                    message: 'Код довольно длинный'
+                });
+                recommendations.push('Рассмотрите разбиение на более мелкие функции');
+                quality_score -= 5;
+            }
+            
+            if (code.includes('print(')) {
+                recommendations.push('Для продакшена рассмотрите использование логирования вместо print()');
+            }
+            
+            if (code.includes('def ') && !code.includes('return')) {
+                issues.push({
+                    type: 'Логика',
+                    message: 'Функция без return может быть неполной'
+                });
+                recommendations.push('Убедитесь, что функции возвращают значения');
+                quality_score -= 5;
+            }
+            
+            // Проверка на наличие комментариев
+            const commentLines = code.split('\n').filter(line => line.trim().startsWith('#')).length;
+            const totalLines = code.split('\n').length;
+            const commentRatio = commentLines / totalLines;
+            
+            if (commentRatio < 0.1 && totalLines > 10) {
+                recommendations.push('Добавьте больше комментариев для лучшей читаемости кода');
+            }
+            
+            let summary = 'Хороший код';
+            if (quality_score >= 90) {
+                summary = 'Отличный код!';
+            } else if (quality_score >= 80) {
+                summary = 'Хороший код';
+            } else if (quality_score >= 70) {
+                summary = 'Удовлетворительный код';
+            } else {
+                summary = 'Код требует улучшения';
+            }
+            
+            return {
+                quality_score: Math.max(60, quality_score),
+                issues: issues,
+                recommendations: recommendations,
+                summary: summary
+            };
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Rubin AI Matrix - Офлайн режим загружен');
+        });
+    </script>
+</body>
+</html>
