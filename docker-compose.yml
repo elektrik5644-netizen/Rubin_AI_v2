@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rubin_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/collections"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # LocalAI Server
+  localai:
+    image: localai/localai:latest
+    container_name: rubin_localai
+    ports:
+      - "11434:11434"
+    volumes:
+      - localai_models:/models
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Smart Dispatcher (Main Service)
+  smart-dispatcher:
+    build: .
+    container_name: rubin_dispatcher
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - QDRANT_URL=http://qdrant:6333
+      - LOCALAI_URL=http://localai:11434
+      - FLASK_ENV=production
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      localai:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NeuroRepository API
+  neuro-repository:
+    build: .
+    container_name: rubin_neuro
+    ports:
+      - "8085:8085"
+    environment:
+      - PORT=8085
+      - NEURO_REPO_PATH=/app/NeuroRepository
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./NeuroRepository:/app/NeuroRepository:ro
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Electrical Module
+  electrical-module:
+    build: .
+    container_name: rubin_electrical
+    ports:
+      - "8087:8087"
+    environment:
+      - PORT=8087
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # Mathematics Module
+  math-module:
+    build: .
+    container_name: rubin_math
+    ports:
+      - "8086:8086"
+    environment:
+      - PORT=8086
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # PLC Analysis Module
+  plc-module:
+    build: .
+    container_name: rubin_plc
+    ports:
+      - "8088:8088"
+    environment:
+      - PORT=8088
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # Programming Module
+  programming-module:
+    build: .
+    container_name: rubin_programming
+    ports:
+      - "8089:8089"
+    environment:
+      - PORT=8089
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # Telegram Bot
+  telegram-bot:
+    build: .
+    container_name: rubin_telegram
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - SMART_DISPATCHER_URL=http://smart-dispatcher:8080
+      - ELECTRICAL_GRAPH_URL=http://electrical-module:8087
+    depends_on:
+      smart-dispatcher:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Redis for Caching (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: rubin_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Load Balancer (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: rubin_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - smart-dispatcher
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:
+  localai_models:
+  redis_data:
+
+networks:
+  default:
+    name: rubin_network
