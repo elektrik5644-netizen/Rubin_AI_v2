@@ -11,6 +11,7 @@ import logging
 import os
 import json
 from datetime import datetime
+from ethical_core import ActionType, assess_action
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -27,13 +28,96 @@ try:
 except ImportError:
     DIRECTIVES_AVAILABLE = False
 
+def get_base_url():
+    """Определяет базовый URL в зависимости от окружения"""
+    return "host.docker.internal" if os.getenv("DOCKER_ENV") else "localhost"
+
 def check_ethical_core_availability():
     """Динамическая проверка доступности Ethical Core"""
     try:
-        response = requests.get("http://localhost:8105/api/health", timeout=1)
+        response = requests.get(f"http://{get_base_url()}:8105/api/health", timeout=1)
         return response.status_code == 200
     except:
         return False
+
+def handle_arduino_nano_query(query):
+    """Встроенная обработка запросов Arduino Nano"""
+    query_lower = query.lower()
+    
+    # База знаний Arduino Nano
+    arduino_knowledge = {
+        'pins': {
+            'digital': ['D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13'],
+            'analog': ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+            'pwm': ['D3', 'D5', 'D6', 'D9', 'D10', 'D11'],
+            'power': ['5V', '3.3V', 'GND', 'VIN']
+        },
+        'functions': {
+            'digitalwrite': 'digitalWrite(pin, value) - устанавливает HIGH или LOW на цифровой пин',
+            'digitalread': 'digitalRead(pin) - читает состояние цифрового пина',
+            'analogread': 'analogRead(pin) - читает аналоговое значение (0-1023)',
+            'analogwrite': 'analogWrite(pin, value) - PWM сигнал (0-255)',
+            'pinmode': 'pinMode(pin, mode) - настраивает пин как INPUT или OUTPUT',
+            'delay': 'delay(ms) - пауза в миллисекундах',
+            'millis': 'millis() - возвращает время с запуска в миллисекундах'
+        },
+        'libraries': {
+            'servo': 'Servo.h - управление сервоприводами',
+            'wire': 'Wire.h - I2C коммуникация',
+            'spi': 'SPI.h - SPI коммуникация',
+            'eeprom': 'EEPROM.h - работа с энергонезависимой памятью',
+            'wifi': 'WiFi.h - подключение к WiFi (ESP32/ESP8266)',
+            'bluetooth': 'BluetoothSerial.h - Bluetooth коммуникация'
+        },
+        'projects': {
+            'led_blink': 'Мигание светодиода - базовый проект',
+            'button_led': 'Управление светодиодом кнопкой',
+            'servo_control': 'Управление сервоприводом',
+            'sensor_read': 'Чтение данных с датчиков',
+            'motor_control': 'Управление моторами',
+            'lcd_display': 'Вывод информации на LCD дисплей'
+        }
+    }
+    
+    # Анализ запроса и формирование ответа
+    response_parts = []
+    
+    if any(word in query_lower for word in ['пин', 'pin', 'пины', 'pins']):
+        response_parts.append("**Пины Arduino Nano:**")
+        for pin_type, pins in arduino_knowledge['pins'].items():
+            response_parts.append(f"- {pin_type.upper()}: {', '.join(pins)}")
+    
+    if any(word in query_lower for word in ['функция', 'function', 'функции', 'functions']):
+        response_parts.append("\n**Основные функции:**")
+        for func, desc in arduino_knowledge['functions'].items():
+            response_parts.append(f"- {func}: {desc}")
+    
+    if any(word in query_lower for word in ['библиотека', 'library', 'библиотеки', 'libraries']):
+        response_parts.append("\n**Популярные библиотеки:**")
+        for lib, desc in arduino_knowledge['libraries'].items():
+            response_parts.append(f"- {lib}: {desc}")
+    
+    if any(word in query_lower for word in ['проект', 'project', 'проекты', 'projects']):
+        response_parts.append("\n**Примеры проектов:**")
+        for proj, desc in arduino_knowledge['projects'].items():
+            response_parts.append(f"- {proj}: {desc}")
+    
+    if any(word in query_lower for word in ['ошибка', 'error', 'проблема', 'problem', 'не работает']):
+        response_parts.append("\n**Частые проблемы и решения:**")
+        response_parts.append("- Проверьте подключение USB кабеля")
+        response_parts.append("- Убедитесь, что выбран правильный порт в IDE")
+        response_parts.append("- Проверьте правильность подключения компонентов")
+        response_parts.append("- Убедитесь в корректности синтаксиса кода")
+    
+    if not response_parts:
+        response_parts.append("**Arduino Nano - микроконтроллер:**")
+        response_parts.append("- 14 цифровых пинов (6 с PWM)")
+        response_parts.append("- 8 аналоговых пинов")
+        response_parts.append("- Рабочее напряжение: 5V")
+        response_parts.append("- Питание: USB или внешний источник")
+        response_parts.append("- Процессор: ATmega328P")
+    
+    return "\n".join(response_parts)
 
 # Проверка доступности Ethical Core
 ETHICAL_CORE_AVAILABLE = False
@@ -102,8 +186,8 @@ def get_context_for_message(session_id, message):
 SERVERS = {
     'electrical': {
         'port': 8087,
-        'endpoint': '/api/chat',
-        'keywords': ['закон', 'кирхгофа', 'резистор', 'транзистор', 'диод', 'конденсатор', 'контактор', 'реле', 'мощность', 'ток', 'напряжение', 'схема', 'электрические', 'электричество', 'цепи', 'тиристор', 'симистр', 'ом', 'закон ома', 'электрическая цепь', 'сопротивление', 'катушка', 'индуктивность', 'конденсатор', 'емкость', 'коэффициент мощности', 'power factor', 'cos φ', 'cosφ', 'реактивная мощность']
+        'endpoint': '/api/electrical/solve',
+        'keywords': ['закон', 'кирхгофа', 'резистор', 'резисторы', 'транзистор', 'транзисторы', 'диод', 'диоды', 'конденсатор', 'конденсаторы', 'контактор', 'реле', 'мощность', 'ток', 'напряжение', 'схема', 'схемы', 'электрические', 'электричество', 'цепи', 'тиристор', 'симистр', 'ом', 'закон ома', 'электрическая цепь', 'сопротивление', 'катушка', 'индуктивность', 'емкость', 'коэффициент мощности', 'power factor', 'cos φ', 'cosφ', 'реактивная мощность', 'как работает', 'как устроен', 'принцип работы', 'электротехника', 'электроника', 'электронные компоненты']
     },
     'radiomechanics': {
         'port': 8089,
@@ -122,13 +206,18 @@ SERVERS = {
     },
     'programming': {
         'port': 8088,
-        'endpoint': '/api/chat',
-        'keywords': ['продвинутые', 'специфические', 'функции', 'алгоритмы', 'алгоритм', 'программирование', 'код', 'разработка', 'python', 'javascript', 'c++', 'java', 'автоматизация', 'промышленная', 'конвейер', 'управление', 'сортировка', 'ошибки', 'error', 'xml', 'обработка', 'debug', 'отладка', 'синтаксис', 'переменные', 'переменная', 'логика', 'управления', 'if', 'endif', 'условия', 'циклы', 'функции', 'методы', 'классы', 'объекты']
+        'endpoint': '/api/programming/explain',
+        'keywords': ['продвинутые', 'специфические', 'функции', 'алгоритмы', 'алгоритм', 'программирование', 'програмировать', 'программировать', 'код', 'разработка', 'python', 'javascript', 'c++', 'java', 'автоматизация', 'промышленная', 'конвейер', 'управление', 'сортировка', 'ошибки', 'error', 'xml', 'обработка', 'debug', 'отладка', 'синтаксис', 'переменные', 'переменная', 'логика', 'управления', 'if', 'endif', 'условия', 'циклы', 'функции', 'методы', 'классы', 'объекты', 'как писать', 'как создать', 'как сделать', 'написать код', 'создать программу', 'разработать', 'программист', 'разработчик']
+    },
+    'physics': {
+        'port': 8110,
+        'endpoint': '/api/physics/explain',
+        'keywords': ['фотон', 'электрон', 'протон', 'нейтрон', 'атом', 'молекула', 'квант', 'квантовая', 'физика', 'механика', 'термодинамика', 'оптика', 'электродинамика', 'ядерная физика', 'релятивистская', 'эйнштейн', 'ньютон', 'законы ньютона', 'гравитация', 'магнетизм', 'электромагнитное поле', 'волна', 'частица', 'энергия', 'масса', 'скорость света', 'планк', 'бозон', 'фермион', 'спин', 'орбиталь', 'изотоп', 'радиоактивность', 'ядерная реакция', 'синтез', 'деление', 'плазма', 'сверхпроводимость', 'криогеника', 'лазер', 'полупроводник', 'диэлектрик', 'проводник', 'изолятор', 'что такое', 'что такой', 'объясни', 'расскажи']
     },
     'general': {
         'port': 8085,
         'endpoint': '/api/chat',
-        'keywords': ['привет', 'hello', 'hi', 'здравствуй', 'помощь', 'help', 'справка', 'статус', 'status', 'работает', 'онлайн', 'что', 'как', 'объясни', 'расскажи']
+        'keywords': ['привет', 'hello', 'hi', 'здравствуй', 'помощь', 'help', 'справка', 'статус', 'status', 'работает', 'онлайн', 'как', 'объясни', 'расскажи']
     },
     'neuro': {
         'port': 8090,
@@ -170,6 +259,21 @@ SERVERS = {
             'port': 8105,
             'endpoint': '/api/ethical/assess',
             'keywords': ['этическое ядро', 'безопасность', 'риск', 'оценка', 'этика', 'контроль', 'veto', 'заблокировать', 'разрешить', 'проверить безопасность']
+        },
+        'arduino_nano': {
+            'port': None,  # Встроенный модуль
+            'endpoint': None,  # Встроенный модуль
+            'keywords': ['arduino', 'ардуино', 'nano', 'нано', 'микроконтроллер', 'пин', 'pin', 'digitalwrite', 'analogread', 'servo', 'серво', 'светодиод', 'led', 'кнопка', 'button', 'датчик', 'sensor', 'мотор', 'motor', 'библиотека', 'library', 'функция', 'function', 'код', 'code', 'скетч', 'sketch', 'проект', 'project', 'подключение', 'connection', 'схема', 'circuit', 'программирование', 'programming', 'troubleshooting', 'ошибка', 'error', 'проблема', 'problem', 'не работает', 'не определяется', 'не загружается', 'pwm', 'шим', 'аналоговый', 'analog', 'цифровой', 'digital', 'встроенный', 'builtin', 'led_builtin']
+        },
+        'mcsetup': {
+            'port': 8096,
+            'endpoint': '/api/mcsetup/integrate/rubin',
+            'keywords': ['mcsetup', 'приводы', 'моторы', 'графики', 'настройки приводов', 'анализ графиков', 'производительность моторов', 'конфигурация моторов', 'мониторинг приводов', 'диагностика моторов', 'оптимизация приводов', 'сервоприводы', 'шаговые двигатели', 'частотные преобразователи', 'pmac', 'двигатели', 'приводная система', 'mc setup', 'mc-setup', 'график моторов', 'анализ моторов', 'производительность', 'настройка моторов', 'график привода', 'анализ привода', 'настройка параметров', 'kp', 'ki', 'kd', 'pid настройка', 'рекомендации по графику', 'параметры настройки', 'настройка контроллера', 'график производительности', 'анализ производительности']
+        },
+        'graph_analyzer': {
+            'port': 8097,
+            'endpoint': '/api/graph/integrate/rubin',
+            'keywords': ['анализ графиков', 'графики моторов', 'тренды', 'визуализация', 'отчеты производительности', 'статистика моторов', 'анализ трендов', 'графический анализ', 'диаграммы', 'чарты', 'график', 'диаграмма', 'график привода', 'анализ привода', 'график производительности', 'анализ производительности', 'визуализация данных', 'графический отчет', 'анализ данных', 'статистический анализ']
         }
 }
 
@@ -218,8 +322,14 @@ def categorize_message(message):
     
     # Приоритет для технических терминов - если есть специфические ключевые слова,
     # они имеют приоритет над общими словами
-    technical_categories = ['neuro', 'electrical', 'mathematics', 'controllers', 'programming', 'plc_analysis', 'advanced_math', 'data_processing', 'gai']
+    technical_categories = ['neuro', 'electrical', 'mathematics', 'controllers', 'programming', 'plc_analysis', 'advanced_math', 'data_processing', 'gai', 'arduino_nano', 'mcsetup', 'graph_analyzer', 'physics']
     technical_scores = {cat: scores.get(cat, 0) for cat in technical_categories if scores.get(cat, 0) > 0}
+    
+    # Специальная логика для физики - приоритет над electrical
+    if 'фотон' in message_lower or 'электрон' in message_lower or 'атом' in message_lower or 'квант' in message_lower:
+        if 'physics' in technical_scores and technical_scores['physics'] > 0:
+            logger.info(f"📊 Категоризация: '{message[:50]}...' → physics (приоритет физических терминов)")
+            return 'physics'
     
     if technical_scores:
         # Если есть технические совпадения, выбираем лучший технический
@@ -259,6 +369,7 @@ def ethical_check(message, category):
             'radiomechanics': ActionType.INFORMATION,
             'controllers': ActionType.INFORMATION,
             'neuro': ActionType.ANALYSIS,
+            'arduino_nano': ActionType.INFORMATION,
             'general': ActionType.INFORMATION
         }
         
@@ -283,8 +394,23 @@ def forward_request(category, message):
     if category not in SERVERS:
         return None, "Неизвестная категория"
     
+    # Получаем контекст для сообщения
+    session_id = get_session_id()
+    contextual_message = get_context_for_message(session_id, message)
+    
+    # Проверяем, является ли это встроенным модулем Arduino Nano
+    if category == 'arduino_nano':
+        logger.info("🔧 Обработка запроса Arduino Nano как встроенного модуля")
+        result = handle_arduino_nano_query(contextual_message)
+        return result, None  # Возвращаем кортеж (result, error)
+    
+    # Получаем конфигурацию для внешнего сервера
     config = SERVERS[category]
-    url = f"http://localhost:{config['port']}{config['endpoint']}"
+    if not config.get('port'):
+        logger.warning(f"⚠️ Модуль {category} не настроен или не имеет порта")
+        return None, f'Модуль {category} недоступен'
+    
+    url = f"http://{get_base_url()}:{config['port']}{config['endpoint']}"
 
     # Предотвращаем самозацикливание: никогда не шлём запросы на 8080 (сам Smart Dispatcher)
     if config.get('port') == 8080:
@@ -293,17 +419,27 @@ def forward_request(category, message):
         if fallback_cfg:
             category = 'general'
             config = fallback_cfg
-            url = f"http://localhost:{config['port']}{config['endpoint']}"
-    
-    # Получаем контекст для сообщения
-    session_id = get_session_id()
-    contextual_message = get_context_for_message(session_id, message)
+            url = f"http://{get_base_url()}:{config['port']}{config['endpoint']}"
     
     # Подготавливаем данные в зависимости от сервера
     if category in ['radiomechanics']:
         payload = {'concept': contextual_message}
-    elif category in ['electrical', 'programming', 'controllers']:
+    elif category in ['physics']:
+        # Извлекаем ключевое понятие из сообщения для Physics Server
+        physics_keywords = ['фотон', 'электрон', 'протон', 'нейтрон', 'атом', 'молекула', 'квант', 'квантовая', 'физика', 'механика', 'термодинамика', 'оптика', 'электродинамика', 'ядерная физика', 'релятивистская', 'эйнштейн', 'ньютон', 'законы ньютона', 'гравитация', 'магнетизм', 'электромагнитное поле', 'волна', 'частица', 'энергия', 'масса', 'скорость света', 'планк', 'бозон', 'фермион', 'спин', 'орбиталь', 'изотоп', 'радиоактивность', 'ядерная реакция', 'синтез', 'деление', 'плазма', 'сверхпроводимость', 'криогеника', 'лазер', 'полупроводник', 'диэлектрик', 'проводник', 'изолятор']
+        concept = None
+        for keyword in physics_keywords:
+            if keyword in contextual_message.lower():
+                concept = keyword
+                break
+        if not concept:
+            concept = contextual_message  # Fallback к полному сообщению
+        payload = {'concept': concept}
+        logger.info(f"🔍 Physics payload: {payload}")
+    elif category in ['electrical', 'controllers']:
         payload = {'message': contextual_message}
+    elif category in ['programming']:
+        payload = {'concept': contextual_message}
     elif category in ['plc_analysis']:
         payload = {'file_path': contextual_message, 'action': 'analyze'}
     elif category in ['advanced_math']:
@@ -314,6 +450,12 @@ def forward_request(category, message):
         payload = {'query': contextual_message, 'type': 'hybrid'}
     elif category in ['system_utils']:
         payload = {'command': contextual_message, 'action': 'execute'}
+    elif category in ['gai']:
+        payload = {'prompt': contextual_message, 'max_tokens': 200, 'temperature': 0.7}
+    elif category in ['mcsetup']:
+        payload = {'query': contextual_message, 'analysis_type': 'general'}
+    elif category in ['graph_analyzer']:
+        payload = {'query': contextual_message, 'analysis_type': 'graph_analysis'}
     else:  # mathematics, general, neuro
         payload = {'message': contextual_message}
     
@@ -354,12 +496,14 @@ def forward_request(category, message):
         # Fallback для физических задач - отправляем к mathematics
         if category == 'electrical' and any(word in message.lower() for word in ['напряжение', 'ток', 'мощность', 'энергия', 'кинетическая', 'потенциальная']):
             logger.info(f"🔄 Fallback: отправляем физическую задачу к mathematics")
-            return forward_request('mathematics', message)
+            result, error = forward_request('mathematics', message)
+            return result, error
         
         # Fallback для математических задач - отправляем к advanced_math
         if category == 'mathematics' and any(word in message.lower() for word in ['уравнение', 'интеграл', 'производная', 'система']):
             logger.info(f"🔄 Fallback: отправляем сложную математическую задачу к advanced_math")
-            return forward_request('advanced_math', message)
+            result, error = forward_request('advanced_math', message)
+            return result, error
         
         return None, str(e)
 
@@ -373,7 +517,7 @@ def index():
             'name': 'Smart Dispatcher',
             'version': '1.0',
             'status': 'online',
-            'servers': {name: f"localhost:{config['port']}" for name, config in SERVERS.items()},
+            'servers': {name: f"{get_base_url()}:{config['port']}" for name, config in SERVERS.items()},
             'note': 'RubinIDE.html not found'
         })
 
@@ -437,7 +581,7 @@ def chat():
                 'success': True,
                 'response': 'Привет! Готов помочь по программированию, электротехнике, автоматизации и математике. Чем заняться? ',
                 'category': 'general',
-                'server': f"localhost:{SERVERS['general']['port']}",
+                'server': f"{get_base_url()}:{SERVERS['general']['port']}",
                 'ethical_core': {
                     'active': ETHICAL_CORE_AVAILABLE,
                     'message': ethical_message
@@ -457,7 +601,7 @@ def chat():
                     'success': True,
                     'response': response_text,
                     'category': 'general',
-                    'server': f"localhost:{SERVERS['general']['port']}",
+                    'server': f"{get_base_url()}:{SERVERS['general']['port']}",
                     'fallback_from': category,
                     'ethical_core': {
                         'active': ETHICAL_CORE_AVAILABLE,
@@ -469,11 +613,18 @@ def chat():
         
         if result:
             response_text = _extract_text_from_result(result)
+            
+            # Определяем сервер для ответа
+            if category == 'arduino_nano':
+                server_info = f"{get_base_url()}:8080 (встроенный модуль)"
+            else:
+                server_info = f"{get_base_url()}:{SERVERS[category]['port']}"
+            
             return jsonify({
                 'success': True,
                 'response': response_text,
                 'category': category,
-                'server': f"localhost:{SERVERS[category]['port']}",
+                'server': server_info,
                 'ethical_core': {
                     'active': ETHICAL_CORE_AVAILABLE,
                     'message': ethical_message
@@ -487,7 +638,9 @@ def chat():
             }), 500
         
     except Exception as e:
+        import traceback
         logger.error(f"Ошибка в диспетчере: {e}")
+        logger.error(f"Трейс ошибки: {traceback.format_exc()}")
         return jsonify({'error': f'Внутренняя ошибка: {str(e)}'}), 500
 
 @app.route('/api/ethical/status')
@@ -572,7 +725,7 @@ def health():
     module_status = {}
     for name, config in SERVERS.items():
         try:
-            response = requests.get(f"http://localhost:{config['port']}/api/health", timeout=5)
+            response = requests.get(f"http://{get_base_url()}:{config['port']}/api/health", timeout=5)
             module_status[name] = {
                 'status': 'healthy' if response.status_code == 200 else 'unhealthy',
                 'port': config['port'],

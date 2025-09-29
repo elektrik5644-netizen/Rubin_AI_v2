@@ -67,20 +67,21 @@ class IntelligentDispatcher:
         
         self._initialize_handlers()
         
-        # Метрики модулей
+        # Метрики модулей - только существующие серверы
         self.module_metrics: Dict[str, ModuleMetrics] = {
             "general": ModuleMetrics(module_name="Simple Chat", port=8085),
             "mathematics": ModuleMetrics(module_name="Math Server", port=8086),
             "programming": ModuleMetrics(module_name="Programming", port=8088),
             "electrical": ModuleMetrics(module_name="Electrical", port=8087),
-            "neuro": ModuleMetrics(module_name="Neuro", port=8090),
-            "advanced_math": ModuleMetrics(module_name="Advanced Math", port=8100),
-            "data_processing": ModuleMetrics(module_name="Data Processing", port=8101),
-            "search_engine": ModuleMetrics(module_name="Search Engine", port=8102),
-            "system_utils": ModuleMetrics(module_name="System Utils", port=8103),
-            "gai_server": ModuleMetrics(module_name="GAI Server", port=8104),
-            "ethical_core": ModuleMetrics(module_name="Ethical Core", port=8105),
-            "controllers": ModuleMetrics(module_name="Controllers", port=9000)
+            "gai_server": ModuleMetrics(module_name="GAI Server", port=8104)
+            # Отключенные модули - не существуют или не работают
+            # "neuro": ModuleMetrics(module_name="Neuro", port=8090),
+            # "advanced_math": ModuleMetrics(module_name="Advanced Math", port=8100),
+            # "data_processing": ModuleMetrics(module_name="Data Processing", port=8101),
+            # "search_engine": ModuleMetrics(module_name="Search Engine", port=8102),
+            # "system_utils": ModuleMetrics(module_name="System Utils", port=8103),
+            # "ethical_core": ModuleMetrics(module_name="Ethical Core", port=8105),
+            # "controllers": ModuleMetrics(module_name="Controllers", port=9000)
         }
         self.request_history: deque = deque(maxlen=1000)
         self.request_table: Dict[str, int] = defaultdict(int)

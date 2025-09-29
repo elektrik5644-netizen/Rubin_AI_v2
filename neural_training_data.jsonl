@@ -1,10 +1,50 @@
+{"question": "привет", "correct_category": "общие", "user_rating": 5}
+{"question": "как дела", "correct_category": "общие", "user_rating": 5}
+{"question": "что нового", "correct_category": "общие", "user_rating": 5}
+{"question": "помощь", "correct_category": "общие", "user_rating": 5}
+{"question": "справка", "correct_category": "общие", "user_rating": 5}
 {"question": "2+2", "correct_category": "математика", "user_rating": 5}
-{"question": "Что такое транзистор?", "correct_category": "электротехника", "user_rating": 5}
-{"question": "Реши 5*10", "correct_category": "математика", "user_rating": 5}
-{"question": "Как работает for loop в python?", "correct_category": "программирование", "user_rating": 5}
-{"timestamp": "2025-09-20T19:40:15.140259", "question": "что такое резистор?", "correct_category": "electrical", "user_rating": 5}
-{"timestamp": "2025-09-20T19:40:25.209765", "question": "как работает антенна?", "correct_category": "radiomechanics", "user_rating": 4}
-{"timestamp": "2025-09-20T19:40:35.549822", "question": "объясни алгоритм сортировки", "correct_category": "programming", "user_rating": 5}
-{"timestamp": "2025-09-20T19:41:50.055564", "question": "что такое резистор?", "correct_category": "electrical", "user_rating": 5}
-{"timestamp": "2025-09-20T19:41:53.120619", "question": "как работает антенна?", "correct_category": "radiomechanics", "user_rating": 4}
-{"timestamp": "2025-09-20T19:41:56.175576", "question": "объясни алгоритм сортировки", "correct_category": "programming", "user_rating": 5}
+{"question": "реши уравнение x+5=10", "correct_category": "математика", "user_rating": 5}
+{"question": "вычисли интеграл", "correct_category": "математика", "user_rating": 5}
+{"question": "найди производную", "correct_category": "математика", "user_rating": 5}
+{"question": "математическая формула", "correct_category": "математика", "user_rating": 5}
+{"question": "что такое транзистор", "correct_category": "электротехника", "user_rating": 5}
+{"question": "закон кирхгофа", "correct_category": "электротехника", "user_rating": 5}
+{"question": "сопротивление резистора", "correct_category": "электротехника", "user_rating": 5}
+{"question": "напряжение и ток", "correct_category": "электротехника", "user_rating": 5}
+{"question": "электрическая схема", "correct_category": "электротехника", "user_rating": 5}
+{"question": "что такое сервопривод", "correct_category": "электротехника", "user_rating": 5}
+{"question": "как работает диод", "correct_category": "электротехника", "user_rating": 5}
+{"question": "конденсатор в цепи", "correct_category": "электротехника", "user_rating": 5}
+{"question": "напиши программу на python", "correct_category": "программирование", "user_rating": 5}
+{"question": "алгоритм сортировки", "correct_category": "программирование", "user_rating": 5}
+{"question": "как работает цикл for", "correct_category": "программирование", "user_rating": 5}
+{"question": "javascript функции", "correct_category": "программирование", "user_rating": 5}
+{"question": "java классы", "correct_category": "программирование", "user_rating": 5}
+{"question": "c++ указатели", "correct_category": "программирование", "user_rating": 5}
+{"question": "что такое pmac", "correct_category": "технические", "user_rating": 5}
+{"question": "plc программирование", "correct_category": "технические", "user_rating": 5}
+{"question": "серводвигатель", "correct_category": "технические", "user_rating": 5}
+{"question": "контроллер движения", "correct_category": "технические", "user_rating": 5}
+{"question": "радиопередатчик", "correct_category": "технические", "user_rating": 5}
+{"question": "антенна", "correct_category": "технические", "user_rating": 5}
+{"question": "частота сигнала", "correct_category": "технические", "user_rating": 5}
+{"question": "нейронная сеть", "correct_category": "ai_связанные", "user_rating": 5}
+{"question": "машинное обучение", "correct_category": "ai_связанные", "user_rating": 5}
+{"question": "искусственный интеллект", "correct_category": "ai_связанные", "user_rating": 5}
+{"question": "генеративный ai", "correct_category": "ai_связанные", "user_rating": 5}
+{"question": "диагностика системы", "correct_category": "системные", "user_rating": 5}
+{"question": "мониторинг производительности", "correct_category": "системные", "user_rating": 5}
+{"question": "оптимизация работы", "correct_category": "системные", "user_rating": 5}
+{"question": "ошибки в системе", "correct_category": "системные", "user_rating": 5}
+{"question": "здоровье системы", "correct_category": "системные", "user_rating": 5}
+{"question": "поиск информации", "correct_category": "поиск", "user_rating": 5}
+{"question": "семантический поиск", "correct_category": "поиск", "user_rating": 5}
+{"question": "гибридный поиск", "correct_category": "поиск", "user_rating": 5}
+{"question": "обработка данных", "correct_category": "данные", "user_rating": 5}
+{"question": "анализ данных", "correct_category": "данные", "user_rating": 5}
+{"question": "статистика", "correct_category": "данные", "user_rating": 5}
+{"question": "визуализация данных", "correct_category": "данные", "user_rating": 5}
+{"question": "этика в ai", "correct_category": "этика", "user_rating": 5}
+{"question": "безопасность", "correct_category": "этика", "user_rating": 5}
+{"question": "этическое ядро", "correct_category": "этика", "user_rating": 5}{"timestamp": "2025-09-28T15:13:00.763960", "question": "тестовый вопрос", "correct_category": "тест", "user_rating": 5}

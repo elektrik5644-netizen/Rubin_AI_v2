@@ -1,0 +1,96 @@
+name: Deploy NeuroRepository API
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'neuro_repository_server.py'
+      - 'api/neuro_repository_api.py'
+      - '.github/workflows/neuro-repository-deploy.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'neuro_repository_server.py'
+      - 'api/neuro_repository_api.py'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flask flask-cors requests
+        
+    - name: Test NeuroRepository API
+      run: |
+        python -c "
+        import sys
+        sys.path.append('.')
+        from neuro_repository_server import app
+        print('✅ NeuroRepository API импортирован успешно')
+        "
+
+  deploy-railway:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Railway
+      uses: railwayapp/railway-deploy@v1
+      with:
+        railway-token: ${{ secrets.RAILWAY_TOKEN }}
+        service: neuro-repository-api
+
+  deploy-fly:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Fly.io CLI
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Deploy to Fly.io
+      run: flyctl deploy --remote-only
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-heroku:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+        heroku_app_name: "neuro-repository-api"
+        heroku_email: "your-email@example.com"
+        appdir: "."
+        procfile: "web: python neuro_repository_server.py"
+
+
+
+
+

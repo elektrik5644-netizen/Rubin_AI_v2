@@ -1,0 +1,16 @@
+{
+  "supported": [
+    "ru",
+    "en",
+    "de",
+    "fr",
+    "es",
+    "zh"
+  ],
+  "default": "ru",
+  "auto_detection": true,
+  "translation": {
+    "provider": "google_translate",
+    "fallback": "yandex_translate"
+  }
+}

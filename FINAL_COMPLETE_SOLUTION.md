@@ -180,3 +180,8 @@ POST /api/mathematics/percentage   # Проценты
 
 
 
+
+
+
+
+

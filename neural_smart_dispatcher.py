@@ -1,308 +1,239 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Интегрированный умный диспетчер с нейронной сетью для Rubin AI v2
+Интеллектуальный диспетчер для Rubin AI v2.0
+Адаптация принципов LocalAI для оптимальной маршрутизации запросов
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import time
+import random
+import threading
 import requests
 import logging
-import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from collections import defaultdict, deque
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Попытка импорта нейронной сети
+# --- ИЗМЕНЕНИЕ 1: ДОБАВЛЕН ИМПОРТ НЕЙРОСЕТИ ---
 try:
     from neural_rubin import get_neural_rubin
     NEURAL_NETWORK_AVAILABLE = True
-    logger.info("🧠 Нейронная сеть доступна!")
+    logging.info("🧠 Neural Rubin AI (нейросеть) успешно импортирован.")
 except ImportError as e:
     NEURAL_NETWORK_AVAILABLE = False
-    logger.warning(f"⚠️ Нейронная сеть недоступна: {e}")
+    logging.warning(f"⚠️ Не удалось импортировать нейросеть: {e}. Диспетчер будет работать в режиме поиска по ключевым словам.")
 
-app = Flask(__name__)
-CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 
-# Обработка CORS preflight запросов
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-        response.headers.add('Access-Control-Allow-Methods', "GET,POST,OPTIONS")
-        response.headers.add('Content-Type', 'application/json; charset=utf-8')
-        return response
+@dataclass
+class ModuleMetrics:
+    """Метрики производительности модуля"""
+    module_name: str
+    port: int
+    request_count: int = 0
+    avg_response_time: float = 0.0
+    error_count: int = 0
+    last_health_check: Optional[datetime] = None
+    status: str = "unknown"  # online, offline, degraded
+    cpu_usage: float = 0.0
+    memory_usage: float = 0.0
 
-# Установка правильных заголовков для всех ответов
-@app.after_request
-def after_request(response):
-    if response.content_type and 'application/json' in response.content_type:
-        response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    return response
+@dataclass
+class RequestMetrics:
+    """Метрики запроса"""
+    timestamp: datetime
+    module: str
+    response_time: float
+    success: bool
+    category: str
 
-# Конфигурация серверов
-SERVERS = {
-    'electrical': {
-        'port': 8087,
-        'endpoint': '/api/electrical/explain',
-        'keywords': ['закон', 'кирхгофа', 'резистор', 'транзистор', 'диод', 'контактор', 'реле', 'мощность', 'ток', 'напряжение', 'схема', 'электрические', 'электричество', 'цепи', 'шим', 'плата', 'модуляция', 'импульсная', 'широтно', 'скважность', 'переключение']
-    },
-    'radiomechanics': {
-        'port': 8089,
-        'endpoint': '/api/radiomechanics/explain',
-        'keywords': ['антенна', 'сигнал', 'радио', 'модуляция', 'частота', 'передатчик', 'приемник']
-    },
-    'controllers': {
-        'port': 9000,
-        'endpoint': '/api/controllers/topic/general',
-        'keywords': ['пид', 'регулятор', 'plc', 'контроллер', 'автоматизация', 'логика', 'события', 'прерывания', 'events', 'interrupts', 'ascii', 'команды', 'протокол', 'отправка', 'получение', 'ответы', 'чпу', 'cnc', 'числовое', 'программное', 'управление', 'передача', 'данные', 'g-коды', 'координаты']
-    },
-    'mathematics': {
-        'port': 8086,
-        'endpoint': '/api/chat',
-        'keywords': ['уравнение', 'квадратное', 'математика', 'алгебра', 'геометрия', 'арифметика']
-    },
-    'programming': {
-        'port': 8088,
-        'endpoint': '/api/programming/explain',
-        'keywords': ['продвинутые', 'специфические', 'функции', 'алгоритмы', 'алгоритм', 'программирование', 'код', 'разработка', 'python', 'javascript', 'c++', 'java', 'автоматизация', 'промышленная', 'конвейер', 'управление', 'сортировка', 'ошибки', 'error', 'xml', 'обработка', 'сценарии', 'сценарий', 'решение', 'проблем', 'проблемы']
-    },
-    'general': {
-        'port': 8085,
-        'endpoint': '/api/chat',
-        'keywords': ['привет', 'hello', 'hi', 'здравствуй', 'помощь', 'help', 'справка', 'статус', 'status', 'работает', 'онлайн', 'что', 'как', 'объясни', 'расскажи']
-    }
-}
-
-def categorize_message_neural(message):
-    """Категоризация сообщения с помощью нейронной сети"""
-    if not NEURAL_NETWORK_AVAILABLE:
-        return categorize_message_keywords(message)
+class IntelligentDispatcher:
+    """Интеллектуальный диспетчер для маршрутизации запросов"""
     
-    try:
-        neural_ai = get_neural_rubin()
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
         
-        # Получаем категорию от нейронной сети
-        category, confidence = neural_ai.classify_question(message)
-        
-        logger.info(f"🧠 Нейронная сеть классифицировала: '{message[:50]}...' → {category} (уверенность: {confidence:.2f})")
-        
-        # Маппинг категорий нейронной сети на наши серверы
-        neural_to_server = {
-            'математика': 'mathematics',
-            'физика': 'mathematics',  # Физика тоже может быть математической
-            'электротехника': 'electrical',
-            'программирование': 'programming',
-            'техника': 'controllers',
-            'общие_вопросы': 'general',
-            'другое': 'general'
+        self.modules = {
+            'controllers': {'port': 9000, 'name': 'Контроллеры'},
+            'electrical': {'port': 8087, 'name': 'Электротехника'},
+            'mathematics': {'port': 8086, 'name': 'Математика'},
+            'programming': {'port': 8088, 'name': 'Программирование'},
+            'neuro': {'port': 8090, 'name': 'Нейронная сеть'},
+            'advanced_math': {'port': 8100, 'name': 'Продвинутая математика'},
+            'data_processing': {'port': 8101, 'name': 'Обработка данных'},
+            'search_engine': {'port': 8102, 'name': 'Поисковая система'},
+            'system_utils': {'port': 8103, 'name': 'Системные утилиты'},
+            'gai_server': {'port': 8104, 'name': 'GAI сервер'},
+            'ethical_core': {'port': 8105, 'name': 'Этическое ядро'},
+            'general': {'port': 8085, 'name': 'Общие ответы'}
         }
         
-        server_category = neural_to_server.get(category, 'general')
+        self._initialize_handlers()
         
-        # Если уверенность низкая, используем keyword-based fallback
-        if confidence < 0.6:
-            logger.info(f"⚠️ Низкая уверенность нейронной сети ({confidence:.2f}), используем keyword-based fallback")
-            return categorize_message_keywords(message)
+        self.module_metrics: Dict[str, ModuleMetrics] = {}
+        self.request_history: deque = deque(maxlen=1000)
+        self.request_table: Dict[str, int] = defaultdict(int)
         
-        return server_category
+        self.load_balanced = True
+        self.health_check_interval = 5
+        self.performance_window = 300
         
-    except Exception as e:
-        logger.error(f"❌ Ошибка нейронной сети: {e}")
-        return categorize_message_keywords(message)
+        self.lock = threading.Lock()
+        
+        self._initialize_metrics()
+        self._start_monitoring()
+    
+    def _initialize_handlers(self):
+        self.math_handler = None
+        self.programming_handler = None
+        self.electrical_handler = None
+        self.enhanced_categorizer = None
+        self.logger.info("Обработчики инициализированы (пусто).")
 
-def categorize_message_keywords(message):
-    """Категоризация сообщения по ключевым словам (fallback)"""
-    message_lower = message.lower()
+    def _initialize_metrics(self):
+        for module_id, config in self.modules.items():
+            self.module_metrics[module_id] = ModuleMetrics(
+                module_name=config['name'],
+                port=config['port']
+            )
     
-    # Подсчитываем совпадения для каждой категории
-    scores = {}
-    for category, config in SERVERS.items():
-        score = 0
-        for keyword in config['keywords']:
-            if keyword in message_lower:
-                score += 1
-        scores[category] = score
-    
-    # Находим категорию с наибольшим количеством совпадений
-    if scores and max(scores.values()) > 0:
-        best_category = max(scores, key=scores.get)
-        logger.info(f"📊 Keyword-based категоризация: '{message[:50]}...' → {best_category} (score: {scores[best_category]})")
-        return best_category
-    
-    # Если нет совпадений, возвращаем general как fallback
-    logger.info(f"❓ Неопределенная категория: '{message[:50]}...' → general (fallback)")
-    return 'general'
+    def _start_monitoring(self):
+        # Мониторинг в этом примере отключен для простоты
+        self.logger.info("Мониторинг модулей в данной версии отключен.")
 
-def forward_request(category, message):
-    """Пересылает запрос к соответствующему серверу"""
-    if category not in SERVERS:
-        return None, "Неизвестная категория"
+    # --- ИЗМЕНЕНИЕ 2: ЛОГИКА КАТЕГОРИЗАЦИИ ЗАМЕНЕНА НА НЕЙРОСЕТЕВУЮ ---
+    def analyze_request_category(self, message: str) -> str:
+        """Категоризация сообщения с помощью нейронной сети с fallback."""
+        if not NEURAL_NETWORK_AVAILABLE:
+            self.logger.warning("⚠️ Нейросеть недоступна, используется fallback на ключевые слова.")
+            return self._fallback_keyword_categorization(message)
+
+        try:
+            neural_ai = get_neural_rubin()
+            category, confidence = neural_ai.classify_question(message)
+            self.logger.info(f"🧠 Нейросеть классифицировала: '{message[:30]}...' → {category} (уверенность: {confidence:.2f})")
+            
+            if confidence < 0.5: # Порог уверенности
+                self.logger.warning(f"⚠️ Низкая уверенность нейросети ({confidence:.2f}), используется fallback.")
+                return self._fallback_keyword_categorization(message)
+            
+            # Сопоставление категорий нейросети с модулями диспетчера
+            neural_to_dispatcher_map = {
+                'физика': 'general', # Модуля физики нет, отправляем в общий
+                'наука': 'general',
+                'математика': 'mathematics',
+                'электротехника': 'electrical',
+                'программирование': 'programming',
+                'контроллеры': 'controllers',
+                'общие_вопросы': 'general'
+            }
+            
+            return neural_to_dispatcher_map.get(category, 'general')
+
+        except Exception as e:
+            self.logger.error(f"❌ Ошибка нейронной классификации: {e}. Используем fallback.")
+            return self._fallback_keyword_categorization(message)
+
+    def _fallback_keyword_categorization(self, message: str) -> str:
+        """Резервная категоризация по ключевым словам."""
+        message_lower = message.lower()
+        categories = {
+            'programming': ['c++', 'python', 'программирование', 'алгоритм', 'сортировка'],
+            'electrical': ['защита', 'ток', 'напряжение', 'резистор', 'транзистор', 'диод'],
+            'controllers': ['пид', 'регулятор', 'plc', 'контроллер', 'автоматизация'],
+        }
+        for category, keywords in categories.items():
+            if any(keyword in message_lower for keyword in keywords):
+                self.logger.info(f"📊 Fallback категоризация: '{message[:30]}...' → {category}")
+                return category
+        
+        self.logger.info(f"❓ Неопределенная категория (Fallback): '{message[:30]}...' → general")
+        return 'general'
+
+    def route_request(self, message: str, request_data: Dict) -> Tuple[Optional[str], str]:
+        """Маршрутизация запроса"""
+        start_time = time.time()
+        
+        category = self.analyze_request_category(message)
+        self.logger.info(f"Категория запроса: {category}")
+        
+        selected_module = category # В этой упрощенной версии категория = модуль
+        
+        if not selected_module or selected_module not in self.modules:
+            self.logger.warning(f"Нет доступных модулей для категории {category}")
+            return None, "no_available_modules"
+        
+        try:
+            response = self._forward_request(selected_module, request_data)
+            response_time = time.time() - start_time
+            self.logger.info(f"Запрос успешно обработан модулем {selected_module} за {response_time:.3f}с")
+            return response, selected_module
+            
+        except Exception as e:
+            self.logger.error(f"Ошибка обработки запроса модулем {selected_module}: {e}")
+            return None, "error"
     
-    config = SERVERS[category]
-    url = f"http://localhost:{config['port']}{config['endpoint']}"
-    
-    # Подготавливаем данные в зависимости от сервера
-    if category in ['electrical', 'radiomechanics', 'controllers', 'programming']:
-        payload = {'concept': message}
-    else:  # mathematics, general
-        payload = {'message': message}
-    
-    try:
-        logger.info(f"🌐 Отправляем запрос к {category} на {url}")
+    def _forward_request(self, module: str, request_data: Dict) -> Dict:
+        """Пересылка запроса к выбранному модулю"""
+        metrics = self.modules[module]
+        endpoint = '/api/chat' # Предполагаем, что у всех целевых серверов есть этот endpoint
+        # В реальной системе здесь была бы более сложная логика определения эндпоинта
+        
+        # Используем host.docker.internal для связи между контейнерами
+        url = f"http://host.docker.internal:{metrics['port']}{endpoint}"
+        
+        payload = {'message': request_data.get('message', '')}
+        
+        self.logger.info(f"🌐 Отправляем запрос к модулю {module} на {url}")
+        
         response = requests.post(url, json=payload, timeout=10)
         
         if response.status_code == 200:
-            logger.info(f"✅ Сервер {category} ответил успешно")
-            return response.json(), category
+            self.logger.info(f"✅ Модуль {module} ответил успешно")
+            return response.json()
         else:
-            logger.error(f"❌ Сервер {category} вернул ошибку: {response.status_code}")
-            return None, f"Ошибка сервера {category}: {response.status_code}"
-            
-    except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Ошибка соединения с {category}: {e}")
-        return None, f"Ошибка соединения с {category}: {e}"
+            raise Exception(f"HTTP {response.status_code}: {response.text}")
 
-@app.route('/')
-def index():
-    return jsonify({
-        'name': 'Smart Dispatcher with Neural Network',
-        'version': '2.0',
-        'status': 'online',
-        'neural_network': 'available' if NEURAL_NETWORK_AVAILABLE else 'unavailable',
-        'servers': list(SERVERS.keys())
-    })
+# Код ниже (Flask app) остается для запуска и обработки HTTP запросов
+# Он будет использовать обновленный класс IntelligentDispatcher
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+dispatcher = IntelligentDispatcher()
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """Основной endpoint для чата"""
     try:
         data = request.get_json()
         message = data.get('message', '').strip()
-        
         if not message:
             return jsonify({'error': 'Сообщение не может быть пустым'}), 400
         
-        # Категоризация сообщения
-        if NEURAL_NETWORK_AVAILABLE:
-            category = categorize_message_neural(message)
-        else:
-            category = categorize_message_keywords(message)
-        
-        # Пересылка запроса
-        response, server_category = forward_request(category, message)
+        response, module = dispatcher.route_request(message, data)
         
         if response:
             return jsonify({
                 'success': True,
-                'category': server_category,
+                'routed_to': module,
                 'response': response,
-                'server': f'localhost:{SERVERS[server_category]["port"]}',
-                'neural_used': NEURAL_NETWORK_AVAILABLE
+                'neural_analysis': NEURAL_NETWORK_AVAILABLE
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': server_category,
-                'neural_used': NEURAL_NETWORK_AVAILABLE
-            }), 500
+            return jsonify({'success': False, 'error': 'Не удалось обработать запрос'}), 500
             
     except Exception as e:
-        logger.error(f"❌ Ошибка в чате: {e}")
+        dispatcher.logger.error(f"❌ Ошибка в /api/chat: {e}")
         return jsonify({'error': f'Внутренняя ошибка сервера: {str(e)}'}), 500
-
-@app.route('/api/neural-status')
-def neural_status():
-    """Статус нейронной сети"""
-    if not NEURAL_NETWORK_AVAILABLE:
-        return jsonify({
-            'available': False,
-            'message': 'Нейронная сеть недоступна'
-        })
-    
-    try:
-        neural_ai = get_neural_rubin()
-        stats = neural_ai.get_neural_stats()
-        
-        return jsonify({
-            'available': True,
-            'stats': stats,
-            'message': 'Нейронная сеть активна'
-        })
-    except Exception as e:
-        return jsonify({
-            'available': False,
-            'error': str(e),
-            'message': 'Ошибка нейронной сети'
-        })
-
-@app.route('/api/neural-feedback', methods=['POST'])
-def neural_feedback():
-    """Обучение нейронной сети на основе обратной связи"""
-    if not NEURAL_NETWORK_AVAILABLE:
-        return jsonify({
-            'success': False,
-            'message': 'Нейронная сеть недоступна для обучения'
-        }), 400
-    
-    try:
-        data = request.get_json()
-        question = data.get('question', '').strip()
-        correct_category = data.get('correct_category', '').strip()
-        rating = data.get('rating', 0)
-        
-        if not question or not correct_category:
-            return jsonify({
-                'success': False,
-                'message': 'Необходимы question и correct_category'
-            }), 400
-        
-        # Получаем нейронную сеть и обучаем
-        neural_ai = get_neural_rubin()
-        success = neural_ai.learn_from_feedback(question, correct_category, rating)
-        
-        if success:
-            return jsonify({
-                'success': True,
-                'message': f'Обучение завершено: "{question}" → {correct_category} (оценка: {rating}/5)'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Ошибка при обучении'
-            }), 500
-            
-    except Exception as e:
-        logger.error(f"❌ Ошибка обучения: {e}")
-        return jsonify({
-            'success': False,
-            'message': f'Ошибка обучения: {str(e)}'
-        }), 500
 
 @app.route('/api/health')
 def health():
-    """Проверка состояния диспетчера"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': time.time(),
-        'neural_network': NEURAL_NETWORK_AVAILABLE,
-        'servers_count': len(SERVERS)
-    })
+    return jsonify({'status': 'healthy', 'neural_network': NEURAL_NETWORK_AVAILABLE})
 
 if __name__ == '__main__':
-    logger.info("Smart Dispatcher с нейронной сетью запущен")
-    logger.info("URL: http://localhost:8080")
-    logger.info("Доступные серверы:")
-    for name, config in SERVERS.items():
-        logger.info(f"  - {name}: localhost:{config['port']}")
-    
-    if NEURAL_NETWORK_AVAILABLE:
-        logger.info("🧠 Нейронная сеть интегрирована!")
-    else:
-        logger.info("⚠️ Нейронная сеть недоступна, используется keyword-based fallback")
-    
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    logger.info("🚀 Запуск ИСПРАВЛЕННОГО нейронного диспетчера...")
+    app.run(host='0.0.0.0', port=8081, debug=False) # Используем порт 8081, как в отчете пользователя

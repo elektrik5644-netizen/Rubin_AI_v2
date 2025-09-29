@@ -1,0 +1,77 @@
+{
+  "start_command": {
+    "function": "handle_start",
+    "description": "Обработка команды /start",
+    "response_template": "Добро пожаловать в Rubin AI v2! Используйте /help для списка команд."
+  },
+  "help_command": {
+    "function": "handle_help",
+    "description": "Обработка команды /help",
+    "response_template": "Доступные команды: {commands_list}"
+  },
+  "status_command": {
+    "function": "handle_status",
+    "description": "Обработка команды /status",
+    "api_endpoint": "/api/status"
+  },
+  "chat_command": {
+    "function": "handle_chat",
+    "description": "Обработка команды /chat",
+    "api_endpoint": "/api/chat"
+  },
+  "neural_command": {
+    "function": "handle_neural",
+    "description": "Обработка команды /neural",
+    "api_endpoint": "/api/neural/analyze"
+  },
+  "cache_stats_command": {
+    "function": "handle_cache_stats",
+    "description": "Обработка команды /cache_stats",
+    "api_endpoint": "/api/enhanced/cache"
+  },
+  "predict_command": {
+    "function": "handle_predict",
+    "description": "Обработка команды /predict",
+    "api_endpoint": "/api/enhanced/predict"
+  },
+  "translate_command": {
+    "function": "handle_translate",
+    "description": "Обработка команды /translate",
+    "api_endpoint": "/api/enhanced/translate"
+  },
+  "monitor_command": {
+    "function": "handle_monitor",
+    "description": "Обработка команды /monitor",
+    "api_endpoint": "/api/system/health"
+  },
+  "backup_command": {
+    "function": "handle_backup",
+    "description": "Обработка команды /backup",
+    "api_endpoint": "/api/system/backup"
+  },
+  "restore_command": {
+    "function": "handle_restore",
+    "description": "Обработка команды /restore",
+    "api_endpoint": "/api/system/restore"
+  },
+  "optimize_command": {
+    "function": "handle_optimize",
+    "description": "Обработка команды /optimize",
+    "api_endpoint": "/api/system/optimize"
+  },
+  "learn_command": {
+    "function": "handle_learn",
+    "description": "Обработка команды /learn",
+    "api_endpoint": "/api/enhanced/learn"
+  },
+  "analytics_command": {
+    "function": "handle_analytics",
+    "description": "Обработка команды /analytics",
+    "api_endpoint": "/api/analytics"
+  },
+  "test_command": {
+    "function": "handle_test",
+    "description": "Обработка команды /test",
+    "api_endpoint": "/api/test"
+  }
+}

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  ethical-core:
+    build:
+      context: .
+      dockerfile: Dockerfile.ethical
+    container_name: ethical-core-server
+    ports:
+      - "8105:8105"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONIOENCODING=utf-8
+      - FLASK_APP=ethical_core_server.py
+      - FLASK_ENV=production
+    volumes:
+      - ./logs:/app/logs
+      - ./neural_training_data.jsonl:/app/neural_training_data.jsonl
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8105/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rubin-network
+
+  # Опционально: база данных для хранения этических данных
+  ethical-db:
+    image: postgres:15-alpine
+    container_name: ethical-database
+    environment:
+      - POSTGRES_DB=ethical_core
+      - POSTGRES_USER=ethical_user
+      - POSTGRES_PASSWORD=ethical_pass
+    volumes:
+      - ethical_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - rubin-network
+
+  # Опционально: Redis для кэширования
+  ethical-redis:
+    image: redis:7-alpine
+    container_name: ethical-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - ethical_redis_data:/data
+    restart: unless-stopped
+    networks:
+      - rubin-network
+
+volumes:
+  ethical_db_data:
+  ethical_redis_data:
+
+networks:
+  rubin-network:
+    driver: bridge
+
+

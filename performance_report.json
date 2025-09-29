@@ -1,0 +1,128 @@
+{
+  "timestamp": "2025-09-29T07:20:57.382875",
+  "summary": {
+    "cpu_usage": 26.5,
+    "memory_usage": 90.7,
+    "api_healthy": true,
+    "total_errors": 3,
+    "performance_score": 88.65
+  },
+  "health_analysis": {
+    "timestamp": "2025-09-29T07:20:57.382915",
+    "system": {
+      "cpu_percent": 26.5,
+      "memory_percent": 90.7,
+      "disk_percent": 91.9,
+      "load_average": [
+        0,
+        0,
+        0
+      ]
+    },
+    "api": {
+      "health_status": true,
+      "response_time": 0.059612,
+      "status": {
+        "error_tracker": "active",
+        "neural_router": "active",
+        "servers_configured": 15,
+        "status": "running",
+        "timestamp": "2025-09-28T23:20:58.462106",
+        "uptime": "active"
+      }
+    },
+    "performance": {},
+    "errors": [
+      {
+        "details": null,
+        "message": "400 Bad Request: Failed to decode JSON object: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "server": "dispatcher",
+        "timestamp": "2025-09-28T23:13:03.709859",
+        "type": "CHAT_ERROR"
+      },
+      {
+        "details": null,
+        "message": "400 Bad Request: Failed to decode JSON object: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "server": "neural_analyzer",
+        "timestamp": "2025-09-28T23:13:32.863736",
+        "type": "ANALYSIS_ERROR"
+      },
+      {
+        "details": null,
+        "message": "400 Bad Request: Failed to decode JSON object: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "server": "dispatcher",
+        "timestamp": "2025-09-28T23:14:38.442253",
+        "type": "CHAT_ERROR"
+      }
+    ]
+  },
+  "bottlenecks": {
+    "timestamp": "2025-09-29T07:20:58.502130",
+    "cpu_bottlenecks": [],
+    "memory_bottlenecks": [
+      {
+        "issue": "Высокая загрузка памяти",
+        "value": 91.0,
+        "severity": "high"
+      }
+    ],
+    "network_bottlenecks": [],
+    "api_bottlenecks": [],
+    "recommendations": [
+      "Оптимизировать использование памяти или добавить RAM"
+    ]
+  },
+  "error_analysis": {
+    "timestamp": "2025-09-29T07:20:59.587807",
+    "common_errors": {
+      "unknown": 3
+    },
+    "error_frequency": {
+      "23:00": 3
+    },
+    "error_trends": [],
+    "suggestions": [
+      "Исследовать причину ошибки: unknown"
+    ]
+  },
+  "optimizations": {
+    "timestamp": "2025-09-29T07:20:59.608869",
+    "applied_optimizations": [
+      {
+        "name": "Включение кэширования",
+        "description": "Кэширование часто используемых запросов",
+        "impact": "Снижение времени ответа на 30-50%",
+        "implementation": "Добавить Redis или in-memory кэш"
+      },
+      {
+        "name": "Оптимизация соединений",
+        "description": "Использование пула соединений для API",
+        "impact": "Снижение задержки на 20-30%",
+        "implementation": "Настроить connection pooling"
+      },
+      {
+        "name": "Асинхронная обработка",
+        "description": "Обработка запросов в асинхронном режиме",
+        "impact": "Увеличение пропускной способности в 2-3 раза",
+        "implementation": "Использовать asyncio или Celery"
+      },
+      {
+        "name": "Сжатие данных",
+        "description": "Сжатие ответов API",
+        "impact": "Снижение трафика на 60-80%",
+        "implementation": "Добавить gzip сжатие"
+      }
+    ],
+    "performance_improvements": [],
+    "configuration_changes": [],
+    "monitoring_recommendations": [
+      "Настроить алерты при превышении порогов производительности",
+      "Мониторить использование ресурсов в реальном времени",
+      "Логировать все критические операции",
+      "Регулярно анализировать метрики производительности"
+    ]
+  },
+  "recommendations": [
+    "Критическая загрузка памяти - требуется оптимизация"
+  ]
+}

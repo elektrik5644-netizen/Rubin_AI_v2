@@ -1,0 +1,25 @@
+{
+  "unit_tests": {
+    "enabled": true,
+    "framework": "pytest",
+    "coverage_threshold": 0.8
+  },
+  "integration_tests": {
+    "enabled": true,
+    "api_endpoints": true,
+    "database": true,
+    "external_services": true
+  },
+  "performance_tests": {
+    "enabled": true,
+    "load_testing": true,
+    "stress_testing": true,
+    "benchmarking": true
+  },
+  "ai_tests": {
+    "enabled": true,
+    "accuracy_testing": true,
+    "bias_testing": true,
+    "robustness_testing": true
+  }
+}

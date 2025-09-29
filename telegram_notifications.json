@@ -1,0 +1,47 @@
+{
+  "types": {
+    "system_alerts": {
+      "enabled": true,
+      "channels": [
+        "telegram",
+        "email",
+        "webhook"
+      ],
+      "severity_levels": [
+        "info",
+        "warning",
+        "critical"
+      ]
+    },
+    "user_notifications": {
+      "enabled": true,
+      "types": [
+        "welcome",
+        "updates",
+        "maintenance",
+        "promotions"
+      ]
+    },
+    "admin_notifications": {
+      "enabled": true,
+      "types": [
+        "system_status",
+        "performance",
+        "errors",
+        "security"
+      ]
+    }
+  },
+  "templates": {
+    "welcome": "Добро пожаловать в Rubin AI v2! Ваш помощник готов к работе.",
+    "system_update": "Система обновлена. Новые функции доступны!",
+    "maintenance": "Плановые работы: {start_time} - {end_time}",
+    "error_alert": "Обнаружена ошибка: {error_message}",
+    "performance_warning": "Высокая нагрузка на систему: {metric} = {value}"
+  },
+  "scheduling": {
+    "immediate": true,
+    "scheduled": true,
+    "recurring": true
+  }
+}

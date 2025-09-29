@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  telegram_bot:
+    # Используем тот же образ, что и для smart dispatcher
+    image: rubin-smart-dispatcher
+    
+    # Политика перезапуска: всегда перезапускать контейнер, если он остановился
+    restart: always
+    
+    # Указываем файл, из которого нужно загрузить переменные окружения (наш токен)
+    env_file:
+      - ./.env
+    
+    # Команда, которая будет выполняться при старте контейнера
+    command: python telegram_bot.py
+    
+    # Зависимости от других сервисов
+    depends_on:
+      - rubin-smart-dispatcher
+    
+    # Сеть для связи с другими контейнерами
+    networks:
+      - rubin-network
+
+  # Основной диспетчер (если не запущен отдельно)
+  rubin-smart-dispatcher:
+    image: rubin-smart-dispatcher
+    restart: always
+    ports:
+      - "8081:8080"
+    networks:
+      - rubin-network
+
+networks:
+  rubin-network:
+    driver: bridge

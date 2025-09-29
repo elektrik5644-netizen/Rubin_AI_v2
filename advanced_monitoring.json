@@ -1,0 +1,44 @@
+{
+  "metrics": {
+    "performance": [
+      "response_time",
+      "throughput",
+      "error_rate"
+    ],
+    "quality": [
+      "accuracy",
+      "confidence",
+      "user_satisfaction"
+    ],
+    "system": [
+      "cpu",
+      "memory",
+      "disk",
+      "network"
+    ],
+    "business": [
+      "requests_per_hour",
+      "popular_categories",
+      "user_retention"
+    ]
+  },
+  "alerts": {
+    "performance_degradation": {
+      "threshold": 2.0,
+      "action": "scale"
+    },
+    "high_error_rate": {
+      "threshold": 0.05,
+      "action": "alert"
+    },
+    "low_accuracy": {
+      "threshold": 0.8,
+      "action": "retrain"
+    }
+  },
+  "dashboards": {
+    "real_time": "grafana",
+    "historical": "prometheus",
+    "business": "custom"
+  }
+}

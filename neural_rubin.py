@@ -66,7 +66,7 @@ except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 import json
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import pickle
 import os
@@ -77,6 +77,9 @@ import csv # Добавляем для логирования истории о�
 from typing import Optional, Tuple, List, Dict, Any # Добавляем для Optional типизации
 import matplotlib.pyplot as plt # Добавляем для визуализации
 from rubin_data_preprocessor import RubinDataPreprocessor # Добавляем для нормализации данных
+import time # Добавляем для измерения времени выполнения
+from collections import defaultdict, Counter # Добавляем для аналитики
+import threading # Добавляем для потокобезопасности
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -141,6 +144,163 @@ class RubinNeuralNetwork(nn.Module):
         classified = self.classifier(encoded)
         return classified
 
+class NeuralAnalytics:
+    """Класс для сбора и анализа данных нейронной сети"""
+    
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.reset_analytics()
+    
+    def reset_analytics(self):
+        """Сброс всех аналитических данных"""
+        with self.lock:
+            # Основные метрики
+            self.total_requests = 0
+            self.total_processing_time = 0.0
+            self.successful_requests = 0
+            self.failed_requests = 0
+            
+            # Статистика по категориям
+            self.category_usage = Counter()
+            self.category_confidence = defaultdict(list)
+            self.category_processing_time = defaultdict(list)
+            
+            # Статистика по времени
+            self.hourly_requests = defaultdict(int)
+            self.daily_requests = defaultdict(int)
+            
+            # Статистика по типам запросов
+            self.request_types = Counter()
+            self.response_times = []
+            
+            # Статистика ошибок
+            self.error_types = Counter()
+            self.error_messages = []
+            
+            # Статистика обучения
+            self.training_sessions = 0
+            self.training_data_points = 0
+            self.model_improvements = []
+            
+            # Время запуска
+            self.start_time = datetime.now()
+    
+    def log_request(self, question: str, category: str, confidence: float, 
+                   processing_time: float, success: bool, error_msg: str = None):
+        """Логирование запроса"""
+        with self.lock:
+            current_time = datetime.now()
+            
+            # Основные метрики
+            self.total_requests += 1
+            self.total_processing_time += processing_time
+            self.response_times.append(processing_time)
+            
+            if success:
+                self.successful_requests += 1
+            else:
+                self.failed_requests += 1
+                if error_msg:
+                    self.error_types[error_msg] += 1
+                    self.error_messages.append({
+                        'timestamp': current_time.isoformat(),
+                        'error': error_msg,
+                        'question': question[:100]  # Первые 100 символов
+                    })
+            
+            # Статистика по категориям
+            self.category_usage[category] += 1
+            self.category_confidence[category].append(confidence)
+            self.category_processing_time[category].append(processing_time)
+            
+            # Статистика по времени
+            hour_key = current_time.strftime('%Y-%m-%d %H:00')
+            day_key = current_time.strftime('%Y-%m-%d')
+            self.hourly_requests[hour_key] += 1
+            self.daily_requests[day_key] += 1
+            
+            # Тип запроса (простая классификация)
+            if len(question) < 50:
+                request_type = 'short'
+            elif len(question) < 200:
+                request_type = 'medium'
+            else:
+                request_type = 'long'
+            self.request_types[request_type] += 1
+    
+    def log_training_session(self, data_points: int, improvement: float = None):
+        """Логирование сессии обучения"""
+        with self.lock:
+            self.training_sessions += 1
+            self.training_data_points += data_points
+            if improvement is not None:
+                self.model_improvements.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'improvement': improvement,
+                    'data_points': data_points
+                })
+    
+    def get_analytics_summary(self) -> Dict[str, Any]:
+        """Получение сводки аналитики"""
+        with self.lock:
+            uptime = datetime.now() - self.start_time
+            
+            # Средние значения
+            avg_processing_time = (self.total_processing_time / self.total_requests 
+                                 if self.total_requests > 0 else 0)
+            avg_confidence = {}
+            for category, confidences in self.category_confidence.items():
+                avg_confidence[category] = np.mean(confidences) if confidences else 0
+            
+            # Топ категории
+            top_categories = self.category_usage.most_common(5)
+            
+            # Статистика производительности
+            if self.response_times:
+                response_times_array = np.array(self.response_times)
+                performance_stats = {
+                    'min': float(np.min(response_times_array)),
+                    'max': float(np.max(response_times_array)),
+                    'mean': float(np.mean(response_times_array)),
+                    'median': float(np.median(response_times_array)),
+                    'std': float(np.std(response_times_array))
+                }
+            else:
+                performance_stats = {'min': 0, 'max': 0, 'mean': 0, 'median': 0, 'std': 0}
+            
+            return {
+                'summary': {
+                    'uptime_seconds': uptime.total_seconds(),
+                    'uptime_human': str(uptime),
+                    'total_requests': self.total_requests,
+                    'successful_requests': self.successful_requests,
+                    'failed_requests': self.failed_requests,
+                    'success_rate': (self.successful_requests / self.total_requests * 100 
+                                   if self.total_requests > 0 else 0),
+                    'avg_processing_time': avg_processing_time
+                },
+                'categories': {
+                    'usage': dict(self.category_usage),
+                    'avg_confidence': avg_confidence,
+                    'top_categories': top_categories
+                },
+                'performance': performance_stats,
+                'requests': {
+                    'types': dict(self.request_types),
+                    'hourly': dict(self.hourly_requests),
+                    'daily': dict(self.daily_requests)
+                },
+                'errors': {
+                    'types': dict(self.error_types),
+                    'recent_errors': self.error_messages[-10:]  # Последние 10 ошибок
+                },
+                'training': {
+                    'sessions': self.training_sessions,
+                    'data_points': self.training_data_points,
+                    'recent_improvements': self.model_improvements[-5:]  # Последние 5 улучшений
+                }
+            }
+
 class NeuralRubinAI:
     """Главный класс нейронной сети Rubin AI"""
     
@@ -157,6 +317,10 @@ class NeuralRubinAI:
         self.math_solver = MathematicalProblemSolver() # Инициализация математического решателя
         self.time_series_processor = RubinTimeSeriesProcessor() # Инициализация процессора временных рядов
         self.data_preprocessor = RubinDataPreprocessor() # Инициализация препроцессора данных
+        
+        # Инициализация аналитики
+        self.analytics = NeuralAnalytics()
+        logger.info("📊 Аналитика нейронной сети инициализирована")
         
         # Категории вопросов
         self.categories = [
@@ -175,8 +339,12 @@ class NeuralRubinAI:
         self.electrical_handler = None
         self.enhanced_categorizer = None
         
+        # Интеграция с Ollama
+        self.ollama_client = None
+        
         self.initialize_models()
         self.initialize_enhanced_handlers()
+        self.initialize_ollama_integration()
     
     def initialize_models(self):
         """Инициализация моделей"""
@@ -184,22 +352,24 @@ class NeuralRubinAI:
             logger.info("🧠 Инициализация нейронной сети...")
             
             if SENTENCE_TRANSFORMERS_AVAILABLE:
-                # Модель для создания эмбеддингов
-                self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-                logger.info("✅ Sentence Transformer загружен")
+                # Модель для создания эмбеддингов (обновлена для 768 нейронов)
+                self.sentence_model = SentenceTransformer('all-mpnet-base-v2')
+                logger.info("✅ Улучшенный Sentence Transformer загружен (768 размер)")
             else:
                 logger.warning("⚠️ SentenceTransformer недоступен, используем mock")
                 self.sentence_model = None
             
             if ML_AVAILABLE:
-                # Наша нейронная сеть
+                # Улучшенная нейронная сеть с увеличенным входным слоем
                 self.neural_network = RubinNeuralNetwork(
-                    input_size=384,  # Размер эмбеддингов
-                    hidden_sizes=[1024, 512, 256, 128], # Сеть сделана глубже и шире
-                    num_classes=len(self.categories)
+                    input_size=768,  # Увеличенный размер эмбеддингов
+                    hidden_sizes=[1536, 768, 384],  # Пропорциональные скрытые слои
+                    num_classes=len(self.categories),
+                    activations=['ReLU', 'ReLU', 'ReLU'],  # Настраиваемые активации
+                    dropout_rates=[0.2, 0.2]  # Dropout для предотвращения переобучения
                 ).to(self.device)
                 
-                logger.info("✅ Нейронная сеть инициализирована")
+                logger.info("✅ Улучшенная нейронная сеть инициализирована (768 входных нейронов)")
                 
                 # Загружаем предобученную модель если есть (закомментировано для демонстрации с гибкими активациями)
                 # self.load_model()
@@ -239,6 +409,45 @@ class NeuralRubinAI:
             self.electrical_handler = None
             self.enhanced_categorizer = None
     
+    def initialize_ollama_integration(self):
+        """Инициализация интеграции с Ollama"""
+        try:
+            logger.info("🔗 Интеграция с Ollama...")
+            
+            # Импортируем requests для HTTP запросов к Ollama
+            import requests
+            import os
+            
+            # Проверяем доступность Ollama
+            ollama_url = os.getenv('OLLAMA_URL', 'http://localhost:11434')
+            try:
+                response = requests.get(f"{ollama_url}/api/tags", timeout=5)
+                if response.status_code == 200:
+                    logger.info("✅ Ollama доступен!")
+                    self.ollama_client = requests
+                    self.ollama_url = ollama_url
+                    
+                    # Добавляем категории для Ollama
+                    ollama_categories = ['llm_general', 'llm_technical', 'llm_creative']
+                    for category in ollama_categories:
+                        if category not in self.categories:
+                            self.categories.append(category)
+                    
+                    logger.info(f"📊 Добавлены категории Ollama: {ollama_categories}")
+                else:
+                    logger.warning("⚠️ Ollama недоступен")
+                    self.ollama_client = None
+            except Exception as e:
+                logger.warning(f"⚠️ Не удалось подключиться к Ollama: {e}")
+                self.ollama_client = None
+                
+        except ImportError as e:
+            logger.warning(f"⚠️ Модуль requests не найден: {e}")
+            self.ollama_client = None
+        except Exception as e:
+            logger.error(f"❌ Ошибка интеграции с Ollama: {e}")
+            self.ollama_client = None
+    
     def create_embedding(self, text):
         """Создает эмбеддинг для текста"""
         try:
@@ -252,10 +461,10 @@ class NeuralRubinAI:
                 # Простой fallback эмбеддинг на основе длины текста и ключевых слов
                 import random
                 random.seed(len(text))  # Детерминированный эмбеддинг
-                return [random.random() for _ in range(384)]
+                return [random.random() for _ in range(768)]
         except Exception as e:
             logger.error(f"Ошибка создания эмбеддинга: {e}")
-            return [0.1] * 384
+            return [0.1] * 768
     
     def classify_question(self, text):
         """Классифицирует вопрос с помощью нейронной сети"""
@@ -287,11 +496,11 @@ class NeuralRubinAI:
         
         # Ключевые слова для категорий
         keywords = {
-            'математика': ['сколько', '+', '-', '*', '/', 'вычисли', 'реши'],
-            'физика': ['скорость', 'время', 'расстояние', 'сила', 'энергия'],
-            'электротехника': ['транзистор', 'диод', 'ток', 'напряжение', 'сопротивление'],
-            'программирование': ['код', 'python', 'c++', 'алгоритм', 'программа'],
-            'геометрия': ['угол', 'треугольник', 'площадь', 'периметр']
+            'математика': ['сколько', '+', '-', '*', '/', 'вычисли', 'реши', 'уравнение', 'формула', 'интеграл', 'производная', '2+2', 'математика', 'сложение', 'вычитание', 'умножение', 'деление'],
+            'физика': ['скорость', 'время', 'расстояние', 'сила', 'энергия', 'физика'],
+            'электротехника': ['транзистор', 'диод', 'ток', 'напряжение', 'сопротивление', 'резистор', 'конденсатор', 'электротехника', 'кирхгофа', 'закон ома', 'электричество', 'мощность', 'схема'],
+            'программирование': ['код', 'python', 'c++', 'алгоритм', 'программа', 'программирование', 'напиши программу'],
+            'геометрия': ['угол', 'треугольник', 'площадь', 'периметр', 'геометрия']
         }
         
         for category, words in keywords.items():
@@ -302,8 +511,31 @@ class NeuralRubinAI:
     
     def generate_response(self, question):
         """Генерирует ответ на вопрос с использованием улучшенных обработчиков"""
+        start_time = time.time()
         try:
             logger.info(f"🧠 Нейронная сеть обрабатывает: {question[:50]}...")
+            
+            # Проверяем Ollama интеграцию
+            if self.ollama_client and self.ollama_url:
+                try:
+                    # Отправляем запрос в Ollama
+                    ollama_response = self.ollama_client.post(
+                        f"{self.ollama_url}/api/generate",
+                        json={
+                            "model": "llama2",
+                            "prompt": f"Ответь на вопрос: {question}",
+                            "stream": False
+                        },
+                        timeout=30
+                    )
+                    
+                    if ollama_response.status_code == 200:
+                        ollama_data = ollama_response.json()
+                        response = ollama_data.get('response', 'Не удалось получить ответ от Ollama')
+                        logger.info(f"🧠 Ollama обработка: {response[:100]}...")
+                        return response, 0.9  # Высокая уверенность для Ollama
+                except Exception as e:
+                    logger.warning(f"⚠️ Ошибка запроса к Ollama: {e}")
             
             # Если доступны улучшенные обработчики, используем их
             if self.enhanced_categorizer and self.enhanced_dispatcher:
@@ -392,6 +624,16 @@ class NeuralRubinAI:
                 'enhanced_processing': self.enhanced_categorizer is not None
             })
             
+            # Логируем в аналитику
+            processing_time = time.time() - start_time
+            self.analytics.log_request(
+                question=question,
+                category=category,
+                confidence=confidence,
+                processing_time=processing_time,
+                success=True
+            )
+            
             return {
                 'response': neural_enhanced_response,
                 'category': category,
@@ -399,17 +641,31 @@ class NeuralRubinAI:
                 'neural_network': True,
                 'enhanced_integration': self.enhanced_categorizer is not None,
                 'provider': provider,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat(),
+                'processing_time': processing_time
             }
             
         except Exception as e:
             logger.error(f"Ошибка генерации ответа: {e}")
+            
+            # Логируем ошибку в аналитику
+            processing_time = time.time() - start_time
+            self.analytics.log_request(
+                question=question,
+                category='error',
+                confidence=0.0,
+                processing_time=processing_time,
+                success=False,
+                error_msg=str(e)
+            )
+            
             return {
                 'response': f'Произошла ошибка в нейронной сети: {str(e)}',
                 'category': 'error',
                 'confidence': 0.0,
                 'neural_network': False,
-                'provider': 'Neural Error Handler'
+                'provider': 'Neural Error Handler',
+                'processing_time': processing_time
             }
     
     def _generate_category_response(self, question, category, confidence):
@@ -726,6 +982,12 @@ class NeuralRubinAI:
             with open('neural_training_data.jsonl', 'a', encoding='utf-8') as f:
                 f.write(json.dumps(training_data, ensure_ascii=False) + '\n')
             
+            # Логируем сессию обучения в аналитику
+            self.analytics.log_training_session(
+                data_points=1,
+                improvement=user_rating / 5.0  # Нормализуем рейтинг
+            )
+            
             return True
             
         except Exception as e:
@@ -854,7 +1116,7 @@ class NeuralRubinAI:
 
     def get_neural_stats(self):
         """Получает статистику нейронной сети"""
-        return {
+        base_stats = {
             'device': str(self.device),
             'neural_network_active': self.neural_network is not None,
             'sentence_model_active': self.sentence_model is not None,
@@ -862,6 +1124,21 @@ class NeuralRubinAI:
             'conversation_count': len(self.conversation_history),
             'model_parameters': sum(p.numel() for p in self.neural_network.parameters()) if self.neural_network else 0
         }
+        
+        # Добавляем аналитику
+        analytics_data = self.analytics.get_analytics_summary()
+        base_stats['analytics'] = analytics_data
+        
+        return base_stats
+    
+    def get_analytics(self):
+        """Получает полную аналитику нейронной сети"""
+        return self.analytics.get_analytics_summary()
+    
+    def reset_analytics(self):
+        """Сбрасывает аналитические данные"""
+        self.analytics.reset_analytics()
+        logger.info("📊 Аналитические данные сброшены")
 
 def plot_training_history(log_file_path: str = "training_log.csv"):
     """Строит график истории обучения из CSV-файла."""

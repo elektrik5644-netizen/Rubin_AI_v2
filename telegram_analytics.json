@@ -1,0 +1,39 @@
+{
+  "metrics": {
+    "user_metrics": [
+      "total_users",
+      "active_users",
+      "new_users",
+      "user_retention"
+    ],
+    "command_metrics": [
+      "command_usage",
+      "popular_commands",
+      "command_success_rate",
+      "average_response_time"
+    ],
+    "system_metrics": [
+      "uptime",
+      "error_rate",
+      "performance",
+      "resource_usage"
+    ],
+    "business_metrics": [
+      "user_engagement",
+      "feature_adoption",
+      "satisfaction_score",
+      "support_requests"
+    ]
+  },
+  "reporting": {
+    "real_time": true,
+    "daily_reports": true,
+    "weekly_reports": true,
+    "monthly_reports": true
+  },
+  "dashboards": {
+    "admin_dashboard": true,
+    "user_dashboard": true,
+    "system_dashboard": true
+  }
+}

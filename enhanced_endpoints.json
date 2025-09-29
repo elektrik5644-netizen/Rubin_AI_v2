@@ -1,0 +1,55 @@
+{
+  "/api/enhanced/cache": {
+    "method": "GET",
+    "description": "Управление кэшем",
+    "features": [
+      "clear",
+      "stats",
+      "config"
+    ]
+  },
+  "/api/enhanced/predict": {
+    "method": "POST",
+    "description": "Предиктивный анализ",
+    "features": [
+      "trends",
+      "forecasting",
+      "anomalies"
+    ]
+  },
+  "/api/enhanced/translate": {
+    "method": "POST",
+    "description": "Перевод текста",
+    "features": [
+      "auto_detect",
+      "batch_translate"
+    ]
+  },
+  "/api/enhanced/voice": {
+    "method": "POST",
+    "description": "Обработка голоса",
+    "features": [
+      "stt",
+      "tts",
+      "commands"
+    ]
+  },
+  "/api/enhanced/image": {
+    "method": "POST",
+    "description": "Анализ изображений",
+    "features": [
+      "detect",
+      "ocr",
+      "classify"
+    ]
+  },
+  "/api/enhanced/learn": {
+    "method": "POST",
+    "description": "Обучение в реальном времени",
+    "features": [
+      "update",
+      "validate",
+      "metrics"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  math-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.math
+    container_name: rubin-math-server
+    ports:
+      - "8086:8086"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - rubin-network
+
+networks:
+  rubin-network:
+    driver: bridge
+
+
+

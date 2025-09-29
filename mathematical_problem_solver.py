@@ -140,7 +140,9 @@ class MathematicalProblemSolver:
             ProblemType.QUADRATIC_EQUATION: [
                 r'квадратное\s+уравнение',
                 r'[a-zA-Z]\^?2\s*[\+\-]',
-                r'[a-zA-Z]²\s*[\+\-]'
+                r'[a-zA-Z]²\s*[\+\-]',
+                r'x[²²^2]\s*[\+\-]\s*\d*x',
+                r'x[²²^2]\s*[\+\-]\s*\d*x\s*[\+\-]\s*\d+\s*=\s*\d+'
             ],
             ProblemType.SYSTEM_EQUATIONS: [
                 r'система\s+уравнений|система\s+линейных',
@@ -317,6 +319,10 @@ class MathematicalProblemSolver:
     def _identify_problem_type(self, problem_text: str) -> ProblemType:
         """Распознавание типа математической задачи"""
         problem_lower = problem_text.lower()
+        
+        # Приоритетная проверка для квадратных уравнений
+        if any(re.search(pattern, problem_lower) for pattern in self.problem_patterns[ProblemType.QUADRATIC_EQUATION]):
+            return ProblemType.QUADRATIC_EQUATION
         
         # Подсчет совпадений для каждого типа
         type_scores = {}
@@ -541,18 +547,51 @@ class MathematicalProblemSolver:
     
     def _solve_quadratic_equation(self, data: Dict[str, Any], problem_text: str) -> Dict[str, Any]:
         """Решение квадратных уравнений"""
-        # Извлечение коэффициентов квадратного уравнения
-        numbers = data.get('numbers', [])
+        # Парсинг квадратного уравнения вида ax² + bx + c = 0
+        # Ищем паттерн: x² + 5x + 6 = 0
+        quadratic_pattern = r'x[²²^2]\s*([+\-]?)\s*(\d*)\s*x\s*([+\-]?)\s*(\d*)\s*=\s*(\d+)'
+        quadratic_match = re.search(quadratic_pattern, problem_text)
         
-        if len(numbers) >= 3:
-            a, b, c = numbers[0], numbers[1], numbers[2]
+        if quadratic_match:
+            try:
+                # Извлекаем коэффициенты
+                a_sign = quadratic_match.group(1) or '+'
+                b_coeff = quadratic_match.group(2) or '1'
+                c_sign = quadratic_match.group(3) or '+'
+                c_coeff = quadratic_match.group(4) or '0'
+                right_side = int(quadratic_match.group(5))
+                
+                # Преобразуем в стандартную форму ax² + bx + c = 0
+                a = 1  # коэффициент при x² всегда 1 в нашем случае
+                b = int(a_sign + b_coeff) if b_coeff else 0
+                c = int(c_sign + c_coeff) if c_coeff else 0
+                
+                # Переносим правую часть влево
+                c = c - right_side
+            except:
+                # Fallback к старому методу
+                numbers = data.get('numbers', [])
+                if len(numbers) >= 3:
+                    a, b, c = numbers[0], numbers[1], numbers[2]
+                else:
+                    return {
+                        'answer': "Недостаточно коэффициентов",
+                        'steps': ["Ошибка: не найдены все коэффициенты"],
+                        'confidence': 0.0,
+                        'explanation': "Для квадратного уравнения нужны 3 коэффициента"
+                    }
         else:
-            return {
-                'answer': "Недостаточно коэффициентов",
-                'steps': ["Ошибка: не найдены все коэффициенты"],
-                'confidence': 0.0,
-                'explanation': "Для квадратного уравнения нужны 3 коэффициента"
-            }
+            # Fallback к старому методу
+            numbers = data.get('numbers', [])
+            if len(numbers) >= 3:
+                a, b, c = numbers[0], numbers[1], numbers[2]
+            else:
+                return {
+                    'answer': "Недостаточно коэффициентов",
+                    'steps': ["Ошибка: не найдены все коэффициенты"],
+                    'confidence': 0.0,
+                    'explanation': "Для квадратного уравнения нужны 3 коэффициента"
+                }
         
         # Вычисление дискриминанта
         discriminant = b**2 - 4*a*c

@@ -203,3 +203,8 @@ def generate_response(message, analysis):
 
 
 
+
+
+
+
+

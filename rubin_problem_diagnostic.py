@@ -24,7 +24,8 @@ class RubinProblemDiagnostic:
             'radiomechanics': {'port': 8089, 'endpoint': '/api/radiomechanics/status', 'status': 'unknown'},
             'controllers': {'port': 9000, 'endpoint': '/api/health', 'status': 'unknown'},
             'neuro': {'port': 8090, 'endpoint': '/api/health', 'status': 'unknown'},
-            'learning': {'port': 8091, 'endpoint': '/api/learning/health', 'status': 'unknown'}
+            'learning': {'port': 8091, 'endpoint': '/api/learning/health', 'status': 'unknown'},
+            'knowledge_api': {'port': 8093, 'endpoint': '/api/knowledge/health', 'status': 'unknown'}
         }
         
         self.problems = []

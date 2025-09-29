@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-09-29T07:24:15.156390",
+  "summary": {
+    "total_metrics_collected": 1,
+    "active_alerts": 1,
+    "system_status": "warning"
+  },
+  "system_metrics": {
+    "timestamp": "2025-09-29T07:24:15.156704",
+    "system": {
+      "cpu_percent": 36.9,
+      "memory_percent": 91.4,
+      "disk_percent": 91.9
+    }
+  },
+  "api_metrics": {
+    "timestamp": "2025-09-29T07:24:16.163258",
+    "api": {
+      "health": {
+        "status": true,
+        "response_time": 0.07261133193969727
+      }
+    }
+  },
+  "alerts_summary": {
+    "warning": 1
+  },
+  "recommendations": [
+    "Оптимизировать использование памяти"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "/start": {
+    "description": "Запуск бота и приветствие",
+    "handler": "start_command",
+    "admin_only": false
+  },
+  "/help": {
+    "description": "Справка по командам",
+    "handler": "help_command",
+    "admin_only": false
+  },
+  "/status": {
+    "description": "Статус системы Rubin AI",
+    "handler": "status_command",
+    "admin_only": false
+  },
+  "/chat": {
+    "description": "Чат с Rubin AI",
+    "handler": "chat_command",
+    "admin_only": false
+  },
+  "/neural": {
+    "description": "Нейронный анализ вопроса",
+    "handler": "neural_command",
+    "admin_only": false
+  },
+  "/cache_stats": {
+    "description": "Статистика кэша системы",
+    "handler": "cache_stats_command",
+    "admin_only": true
+  },
+  "/predict": {
+    "description": "Предиктивный анализ",
+    "handler": "predict_command",
+    "admin_only": false
+  },
+  "/translate": {
+    "description": "Перевод текста",
+    "handler": "translate_command",
+    "admin_only": false
+  },
+  "/monitor": {
+    "description": "Мониторинг системы",
+    "handler": "monitor_command",
+    "admin_only": true
+  },
+  "/backup": {
+    "description": "Резервное копирование",
+    "handler": "backup_command",
+    "admin_only": true
+  },
+  "/restore": {
+    "description": "Восстановление из резервной копии",
+    "handler": "restore_command",
+    "admin_only": true
+  },
+  "/optimize": {
+    "description": "Оптимизация производительности",
+    "handler": "optimize_command",
+    "admin_only": true
+  },
+  "/learn": {
+    "description": "Обучение в реальном времени",
+    "handler": "learn_command",
+    "admin_only": true
+  },
+  "/analytics": {
+    "description": "Аналитика системы",
+    "handler": "analytics_command",
+    "admin_only": true
+  },
+  "/test": {
+    "description": "Тестирование системы",
+    "handler": "test_command",
+    "admin_only": true
+  }
+}

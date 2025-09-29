@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  gai-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.gai
+    container_name: rubin-gai-server
+    ports:
+      - "8104:8104"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    networks:
+      - rubin-network
+    restart: unless-stopped
+
+networks:
+  rubin-network:
+    external: true
+
+
+

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  programming-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.programming
+    container_name: rubin-programming-server
+    ports:
+      - "8088:8088"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - rubin-network
+
+networks:
+  rubin-network:
+    driver: bridge
+
+
+

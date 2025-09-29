@@ -84,12 +84,15 @@ def health_check():
         'neural_status': 'active'
     })
 
-@app.route('/api/neuro/chat', methods=['POST'])
+@app.route('/api/neuro/chat', methods=['GET', 'POST'])
 def neural_chat():
     """Обработка чата через нейронную сеть"""
     try:
-        data = request.get_json()
-        message = data.get('message', '')
+        if request.method == 'GET':
+            message = request.args.get('message', '')
+        else:
+            data = request.get_json()
+            message = data.get('message', '')
         
         logger.info(f"🧠 Получен нейронный запрос: {message[:50]}...")
         
@@ -161,6 +164,8 @@ if __name__ == '__main__':
     print("  - GET /api/health - проверка здоровья")
     
     app.run(host='0.0.0.0', port=8090, debug=True)
+
+
 
 
 

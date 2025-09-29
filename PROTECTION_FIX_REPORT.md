@@ -180,3 +180,8 @@ elif any(word in message_lower for word in ['защит', 'protection', 'кор�
 
 
 
+
+
+
+
+

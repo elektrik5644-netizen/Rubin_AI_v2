@@ -40,6 +40,7 @@ def after_request(response):
     return response
 
 @app.route('/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({
@@ -131,12 +132,15 @@ def index():
         'features': ['quadratic_equations']
     })
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['GET', 'POST'])
 def chat():
     """Основной endpoint для чата с расширенным математическим решателем"""
     try:
-        data = request.get_json()
-        message = data.get('message', '').strip()
+        if request.method == 'GET':
+            message = request.args.get('message', '').strip()
+        else:
+            data = request.get_json()
+            message = data.get('message', '').strip()
         
         if not message:
             return jsonify({'error': 'Сообщение не может быть пустым'}), 400
@@ -175,8 +179,59 @@ def chat():
         logger.error(f"Ошибка в чате: {e}")
         return jsonify({'error': f'Внутренняя ошибка сервера: {str(e)}'}), 500
 
+@app.route('/api/graph/analyze', methods=['POST'])
+def analyze_graph():
+    """Анализ графиков и изображений"""
+    try:
+        data = request.get_json()
+        image_path = data.get('image_path', '')
+        
+        if not image_path:
+            return jsonify({'error': 'Путь к изображению не указан'}), 400
+        
+        logger.info(f"📊 Анализ графика: {image_path}")
+        
+        # Проверяем существование файла
+        import os
+        if not os.path.exists(image_path):
+            return jsonify({
+                'error': 'Файл изображения не найден',
+                'image_path': image_path,
+                'solution': 'Укажите правильный путь к файлу изображения'
+            }), 404
+        
+        # Простой анализ (заглушка)
+        analysis_result = f"""📊 **Анализ графика:**
+
+**Файл:** {image_path}
+**Статус:** Файл найден
+
+**Рекомендации:**
+1. Убедитесь, что изображение содержит график или диаграмму
+2. Для лучшего анализа используйте четкие изображения
+3. Поддерживаемые форматы: PNG, JPG, JPEG
+
+**Возможности анализа:**
+- Извлечение данных с графиков
+- Определение трендов
+- Вычисление значений в точках
+- Анализ функций
+
+*Для полного анализа требуется установка Tesseract OCR*"""
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis_result,
+            'image_path': image_path,
+            'status': 'analyzed'
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка анализа графика: {e}")
+        return jsonify({'error': f'Ошибка анализа: {str(e)}'}), 500
+
 if __name__ == '__main__':
     print("Math Server запущен")
     print("URL: http://localhost:8086")
-    app.run(host='0.0.0.0', port=8086, debug=True)
+    app.run(host='0.0.0.0', port=8086, debug=False)
 

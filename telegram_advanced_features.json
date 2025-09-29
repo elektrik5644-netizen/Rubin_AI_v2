@@ -1,0 +1,61 @@
+{
+  "inline_keyboards": {
+    "enabled": true,
+    "templates": [
+      "main_menu",
+      "settings_menu",
+      "help_menu",
+      "admin_menu"
+    ]
+  },
+  "callback_queries": {
+    "enabled": true,
+    "handlers": [
+      "button_click",
+      "menu_navigation",
+      "settings_update"
+    ]
+  },
+  "file_handling": {
+    "enabled": true,
+    "supported_types": [
+      "image",
+      "document",
+      "audio",
+      "video"
+    ],
+    "max_size": "20MB"
+  },
+  "voice_messages": {
+    "enabled": true,
+    "speech_to_text": true,
+    "text_to_speech": true
+  },
+  "location_sharing": {
+    "enabled": true,
+    "geocoding": true,
+    "weather_integration": true
+  },
+  "scheduled_messages": {
+    "enabled": true,
+    "cron_support": true,
+    "timezone_support": true
+  },
+  "webhooks": {
+    "enabled": true,
+    "endpoints": [
+      "/webhook/telegram",
+      "/webhook/status",
+      "/webhook/analytics"
+    ]
+  },
+  "analytics": {
+    "enabled": true,
+    "metrics": [
+      "user_engagement",
+      "command_usage",
+      "response_times",
+      "error_rates"
+    ]
+  }
+}

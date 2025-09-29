@@ -165,12 +165,15 @@ def index():
         'features': ['greetings', 'help', 'status']
     })
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['GET', 'POST'])
 def chat():
     """Обработка общих вопросов"""
     try:
-        data = request.get_json()
-        message = data.get('message', '')
+        if request.method == 'GET':
+            message = request.args.get('message', '')
+        else:
+            data = request.get_json()
+            message = data.get('message', '')
         
         # Поиск подходящего ответа
         knowledge = find_best_match(message)
@@ -213,4 +216,4 @@ def health():
 
 if __name__ == '__main__':
     logger.info("Запуск сервера общих вопросов на порту 8085...")
-    app.run(host='0.0.0.0', port=8085, debug=True)
+    app.run(host='0.0.0.0', port=8085, debug=False)

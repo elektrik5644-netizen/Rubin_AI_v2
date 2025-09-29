@@ -200,6 +200,7 @@ def get_stats():
         logger.error(f"❌ Ошибка в stats endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/health', methods=['GET'])
 @app.route('/api/knowledge/health', methods=['GET'])
 def health_check():
     """Проверка здоровья сервиса"""
@@ -282,7 +283,15 @@ if __name__ == "__main__":
     print("  GET  /api/knowledge/history - История чата")
     
     # Запуск сервера
-    app.run(host='0.0.0.0', port=8093, debug=True)
+    try:
+        print("🚀 Запуск Knowledge API Server...")
+        app.run(host='0.0.0.0', port=8093, debug=False)
+    except Exception as e:
+        print(f"❌ Ошибка запуска сервера: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 
 
 

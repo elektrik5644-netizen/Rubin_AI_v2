@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  smart-dispatcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.smart-dispatcher
+    container_name: rubin-smart-dispatcher
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - rubin-network
+
+networks:
+  rubin-network:
+    driver: bridge
+
+
+

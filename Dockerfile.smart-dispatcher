@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копирование requirements.txt
+COPY requirements.txt .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копирование исходного кода
+COPY enhanced_smart_dispatcher.py .
+COPY neural_rubin.py .
+COPY ethical_core.py .
+COPY telegram_bot.py .
+COPY handlers/ ./handlers/
+
+# Создание непривилегированного пользователя
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Переменные окружения
+ENV PYTHONUNBUFFERED=1
+ENV DOCKER_ENV=1
+
+# Открытие порта
+EXPOSE 8080
+
+# Команда запуска
+CMD ["python", "enhanced_smart_dispatcher.py"]

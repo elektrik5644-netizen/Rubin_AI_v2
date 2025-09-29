@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
-📡 RADIOMECHANICS SERVER
-========================
-Сервер для радиомеханики и радиоэлектроники
+Radiomechanics Server для обработки радиочастотных вопросов
 """
 
 from flask import Flask, request, jsonify
@@ -17,73 +14,76 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-@app.route('/api/radiomechanics/status', methods=['GET'])
-def radiomechanics_status():
-    """Статус модуля радиомеханики"""
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Проверка здоровья сервера"""
     return jsonify({
-        "module": "radiomechanics",
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0",
-        "capabilities": [
-            "Расчет радиосхем",
-            "Анализ антенн",
-            "Решение задач по радиомеханике"
-        ]
+        'status': 'healthy',
+        'service': 'Radiomechanics Server',
+        'port': 8089,
+        'timestamp': datetime.now().isoformat(),
+        'version': '1.0.0'
     })
 
-@app.route('/api/radiomechanics/solve', methods=['POST'])
-def solve_radiomechanics():
-    """Решение задач радиомеханики"""
+@app.route('/api/chat', methods=['GET', 'POST'])
+def chat():
+    """Обработка радиочастотных вопросов"""
     try:
-        data = request.get_json()
-        problem = data.get('problem', '')
-        
-        logger.info(f"📡 Получена задача радиомеханики: {problem[:50]}...")
-        
-        # Простая логика решения
-        if "антенна" in problem.lower():
-            result = "Антенна - устройство для излучения и приема радиоволн"
-        elif "частота" in problem.lower():
-            result = "Частота - количество колебаний в секунду (Гц)"
-        elif "волна" in problem.lower():
-            result = "Радиоволна - электромагнитное излучение"
-        elif "приемник" in problem.lower():
-            result = "Радиоприемник - устройство для приема радиосигналов"
+        if request.method == 'GET':
+            message = request.args.get('message', '')
         else:
-            result = "Задача радиомеханики требует дополнительного анализа"
+            data = request.get_json()
+            message = data.get('message', '')
+        
+        logger.info(f"📡 Получен запрос радиомеханики: {message[:50]}...")
+        
+        # Простая логика ответов
+        response = "📡 **Radiomechanics Server:**\n\n"
+        response += f"**Запрос:** {message}\n\n"
+        
+        if any(word in message.lower() for word in ['антенна', 'antenna']):
+            response += "**Антенны:**\n"
+            response += "- Дипольная антенна: λ/2\n"
+            response += "- Монопольная антенна: λ/4\n"
+            response += "- Спиральная антенна: для круговой поляризации\n"
+        
+        elif any(word in message.lower() for word in ['сигнал', 'signal']):
+            response += "**Обработка сигналов:**\n"
+            response += "- Амплитудная модуляция (AM)\n"
+            response += "- Частотная модуляция (FM)\n"
+            response += "- Фазовая модуляция (PM)\n"
+        
+        elif any(word in message.lower() for word in ['частота', 'frequency']):
+            response += "**Частотные характеристики:**\n"
+            response += "- Низкие частоты: 30-300 кГц\n"
+            response += "- Средние частоты: 300 кГц - 3 МГц\n"
+            response += "- Высокие частоты: 3-30 МГц\n"
+        
+        else:
+            response += "**Общая информация:**\n"
+            response += "- Радиоволны: электромагнитные волны\n"
+            response += "- Скорость света: c = 3×10⁸ м/с\n"
+            response += "- Формула: λ = c/f\n"
         
         return jsonify({
-            "module": "radiomechanics",
-            "problem": problem,
-            "solution": result,
-            "timestamp": datetime.now().isoformat()
+            'status': 'success',
+            'response': response,
+            'service': 'radiomechanics',
+            'timestamp': datetime.now().isoformat()
         })
         
     except Exception as e:
-        logger.error(f"❌ Ошибка в radiomechanics: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"❌ Ошибка обработки запроса: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
 
-@app.route('/api/health', methods=['GET'])
-def health():
-    """Проверка здоровья сервера"""
-    return jsonify({
-        "service": "radiomechanics",
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
-    })
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     print("📡 Radiomechanics Server запущен")
     print("URL: http://localhost:8089")
     print("Доступные эндпоинты:")
-    print("  - GET /api/radiomechanics/status - статус модуля")
-    print("  - POST /api/radiomechanics/solve - решение задач")
+    print("  - GET/POST /api/chat - обработка радиочастотных вопросов")
     print("  - GET /api/health - проверка здоровья")
-    app.run(host='0.0.0.0', port=8089, debug=True)
-
-
-
-
-
+    print("=" * 60)
+    app.run(host='0.0.0.0', port=8089, debug=False)

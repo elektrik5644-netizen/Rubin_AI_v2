@@ -11,9 +11,9 @@ def count_neurons_in_rubin():
     print("ПОДСЧЕТ НЕЙРОНОВ В RUBIN AI")
     print("=" * 60)
     
-    # Архитектура нейронной сети Rubin AI
-    input_size = 384  # Размер входного слоя (embeddings)
-    hidden_sizes = [512, 256, 128]  # Скрытые слои
+    # Архитектура нейронной сети Rubin AI (обновленная)
+    input_size = 768  # Размер входного слоя (embeddings) - увеличен
+    hidden_sizes = [1536, 768, 384]  # Скрытые слои - пропорционально увеличены
     num_classes = 10  # Выходной слой (категории)
     
     print("АРХИТЕКТУРА НЕЙРОННОЙ СЕТИ:")
@@ -58,7 +58,7 @@ def count_neurons_in_rubin():
     # Дополнительная информация
     print("ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ:")
     print("-" * 40)
-    print(f"Размер embeddings: {input_size} (Sentence Transformers)")
+    print(f"Размер embeddings: {input_size} (all-mpnet-base-v2)")
     print(f"Количество категорий: {num_classes}")
     print(f"Функции активации: ReLU для скрытых слоев")
     print(f"Dropout: 0.2 (20%)")
@@ -85,6 +85,8 @@ if __name__ == "__main__":
         neurons, connections = count_neurons_in_rubin()
     except Exception as e:
         print(f"Ошибка: {e}")
+
+
 
 
 

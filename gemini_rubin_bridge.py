@@ -339,10 +339,10 @@ def test_connection():
         }), 500
 
 if __name__ == '__main__':
-    print("🌉 Запуск моста Gemini-Rubin...")
-    print("📡 Порт: 8082")
-    print("🔗 URL: http://localhost:8082")
-    print("📋 Эндпоинты:")
+    print("Запуск моста Gemini-Rubin...")
+    print("Порт: 8082")
+    print("URL: http://localhost:8082")
+    print("Эндпоинты:")
     print("  - POST /api/gemini/teach - Обучение Rubin")
     print("  - POST /api/gemini/analyze - Анализ Rubin")
     print("  - POST /api/gemini/feedback - Обратная связь")
@@ -353,4 +353,7 @@ if __name__ == '__main__':
     print("=" * 50)
     
     app.run(host='0.0.0.0', port=8082, debug=False)
+
+
+
 

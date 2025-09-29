@@ -1,0 +1,21 @@
+{
+  "name": "ImageAnalyzer",
+  "capabilities": [
+    "object_detection",
+    "text_recognition",
+    "face_recognition",
+    "scene_classification"
+  ],
+  "models": {
+    "detection": "yolo",
+    "ocr": "tesseract",
+    "faces": "opencv",
+    "scenes": "resnet"
+  },
+  "formats": [
+    "jpg",
+    "png",
+    "gif",
+    "bmp"
+  ]
+}

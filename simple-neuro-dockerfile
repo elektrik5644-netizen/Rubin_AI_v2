@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Установка только необходимых зависимостей
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Установка Python зависимостей напрямую
+RUN pip install flask==2.3.3 flask-cors==4.0.0 requests==2.31.0
+
+# Копирование только основного файла
+COPY neuro_repository_server.py .
+
+# Переменные окружения
+ENV PORT=8090
+ENV NEURO_REPO_PATH=/app/NeuroRepository
+ENV FLASK_ENV=production
+
+# Экспорт порта
+EXPOSE 8090
+
+# Команда запуска
+CMD ["python", "neuro_repository_server.py"]
+
+
+
+
+

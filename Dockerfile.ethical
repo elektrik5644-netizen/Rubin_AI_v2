@@ -1,0 +1,39 @@
+# Dockerfile для Ethical Core Server
+FROM python:3.11-slim
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание рабочей директории
+WORKDIR /app
+
+# Копирование файлов зависимостей
+COPY requirements.ethical.txt .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir -r requirements.ethical.txt
+
+# Копирование исходного кода
+COPY ethical_core_server.py .
+COPY neural_rubin.py .
+COPY mathematical_problem_solver.py .
+COPY rubin_time_series_processor.py .
+COPY rubin_data_preprocessor.py .
+
+# Создание директории для логов
+RUN mkdir -p /app/logs
+
+# Установка переменных окружения
+ENV PYTHONPATH=/app
+ENV PYTHONIOENCODING=utf-8
+ENV FLASK_APP=ethical_core_server.py
+ENV FLASK_ENV=production
+
+# Открытие порта
+EXPOSE 8105
+
+# Команда запуска
+CMD ["python", "ethical_core_server.py"]

@@ -264,3 +264,8 @@ print(f"Активных модулей: {len([m for m in stats['module_stats'].
 
 
 
+
+
+
+
+

@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY gai_server.py .
+
+# Создаем непривилегированного пользователя
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Переменные окружения
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
+
+# Открытие порта
+EXPOSE 8104
+
+# Команда запуска
+CMD ["python", "gai_server.py"]
+
+
+
